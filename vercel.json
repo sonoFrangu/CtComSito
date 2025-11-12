@@ -1,0 +1,11 @@
+{
+    "framework": "vite",
+    "buildCommand": "npm ci && npm run build",
+    "outputDirectory": "dist",
+    "cleanUrls": true,
+    "rewrites": [
+      { "source": "/induno", "destination": "/induno.html" },
+      { "source": "/varese", "destination": "/varese.html" },
+      { "source": "/gestione", "destination": "/gestione.html" }
+    ]
+  }
