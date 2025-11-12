@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>CT Communication — Gestione</title>
+    <title>CT Communication — Induno</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body class="text-white bg-neutral-950">
@@ -14,202 +14,61 @@
     </div>
 
     <div id="header"></div>
-    <div id="admin-lock" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <form id="admin-form" class="w-full max-w-md p-6 card">
-        <h2 class="mb-2 text-2xl font-bold">Area riservata</h2>
-        <p class="mb-4 text-sm text-neutral-300">Inserisci la password per accedere alla gestione.</p>
-        <input id="admin-pass" type="password" class="w-full p-3 border rounded-md bg-neutral-900 border-white/10" placeholder="Password amministratore" autocomplete="current-password" />
-        <p id="admin-error" class="hidden mt-2 text-sm text-red-400">Password errata.</p>
-        <div class="flex gap-3 mt-4">
-          <button type="submit" class="w-full btn-primary">Entra</button>
-          <button type="button" id="admin-logout" class="hidden btn-primary">Esci</button>
-        </div>
-      </form>
-    </div>
 
-    <section class="pt-32 section">
+    <section id="galleria" class="section">
       <div class="container">
-        <h1 class="text-4xl font-extrabold md:text-5xl" data-aos="fade-up">Gestione contenuti</h1>
-        <p class="mt-2 text-neutral-300" data-aos="fade-up" data-aos-delay="80">
-          Strumenti per generare rapidamente snippet per gallerie e dispositivi. (Niente salvataggio server-side)
-        </p>
+        <h1 class="mb-6 text-4xl font-extrabold md:text-5xl" data-aos="fade-up">Galleria</h1>
 
-        <!-- Tabs -->
-        <div class="grid gap-4 mt-8 md:grid-cols-3">
-          <a href="#tab-foto" class="btn-primary">Aggiungi foto gallerie</a>
-          <a href="#tab-dispositivi" class="btn-primary">Aggiungi dispositivi</a>
-          <a href="#tab-esportazioni" class="btn-primary">Esportazioni</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- FOTO -->
-    <section id="tab-foto" class="section">
-      <div class="container">
-        <h2 class="mb-6 text-3xl font-bold md:text-4xl" data-aos="fade-up">Nuove foto gallerie</h2>
-
-        <div class="card" data-aos="fade-up">
-          <div class="grid gap-6 md:grid-cols-2">
-            <div>
-              <label class="block mb-1 text-sm text-neutral-300">Sede</label>
-              <select id="foto-sede" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10">
-                <option value="induno">Induno Olona</option>
-                <option value="varese">Varese</option>
-              </select>
-              <p class="mt-3 text-sm text-neutral-300">Limite: massimo <strong>6 foto per sede</strong>.</p>
-              <div class="flex items-center gap-3 mt-2">
-                <button id="reload-gallery" type="button" class="btn-primary">Ricarica galleria</button>
-                <span class="text-xs text-neutral-400">Induno: <span id="count-induno">0</span>/6 • Varese: <span id="count-varese">0</span>/6</span>
-              </div>
-              <div class="grid gap-4 mt-3 md:grid-cols-2">
-                <div>
-                  <h3 class="mb-2 font-semibold">Induno</h3>
-                  <table class="w-full text-sm table-fixed">
-                    <thead><tr><th class="px-2 py-1 text-left">File</th><th class="px-2 py-1">Preview</th><th class="px-2 py-1">Azioni</th></tr></thead>
-                    <tbody id="gallery-list-induno"></tbody>
-                  </table>
-                </div>
-                <div>
-                  <h3 class="mb-2 font-semibold">Varese</h3>
-                  <table class="w-full text-sm table-fixed">
-                    <thead><tr><th class="px-2 py-1 text-left">File</th><th class="px-2 py-1">Preview</th><th class="px-2 py-1">Azioni</th></tr></thead>
-                    <tbody id="gallery-list-varese"></tbody>
-                  </table>
-                </div>
-              </div>
-
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Carica file (drag &amp; drop o seleziona)</label>
-              <div id="foto-drop" class="flex items-center justify-between gap-3 p-4 text-sm border border-dashed rounded-md border-white/20 text-neutral-400">
-                <span>Trascina qui le immagini oppure</span>
-                <label class="cursor-pointer btn-primary">
-                  Seleziona
-                  <input id="foto-input" type="file" accept="image/*" multiple class="hidden">
-                </label>
-              </div>
-              <p class="mt-2 text-xs text-neutral-400">Suggerito: rinomina le immagini come 1.jpg, 2.jpg,… e mettile nella cartella della sede.</p>
-
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Nomi file (uno per riga)</label>
-              <textarea id="foto-files" class="w-full h-32 p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="1.jpg&#10;2.jpg&#10;3.jpg"></textarea>
-
-              <p class="mt-3 text-sm text-neutral-400">
-                Metti fisicamente i file in <code>/src/assets/&lt;sede&gt;-gallery/</code> (es. <code>/src/assets/induno-gallery/</code>).
-              </p>
-
-              <button id="foto-genera" class="mt-4 btn-primary">Genera snippet</button>
-              <button id="foto-upload" type="button" class="mt-2 btn-primary">Carica su Supabase</button>
-              <p id="foto-status" class="mt-2 text-xs text-neutral-400"></p>
-            </div>
-
-            <div>
-              <label class="block mb-1 text-sm text-neutral-300">Snippet HTML da incollare nella galleria</label>
-              <textarea id="foto-output" class="w-full h-64 p-2 border rounded-md bg-neutral-900 border-white/10" readonly></textarea>
-              <div class="flex gap-3 mt-3">
-                <button id="copy-foto" class="btn-primary">Copia</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- DISPOSITIVI -->
-    <section id="tab-dispositivi" class="section">
-      <div class="container">
-        <h2 class="mb-6 text-3xl font-bold md:text-4xl" data-aos="fade-up">Nuovo dispositivo</h2>
-
-        <div class="card" data-aos="fade-up">
-          <div class="grid gap-6 md:grid-cols-2">
-            <div>
-              <label class="block mb-1 text-sm text-neutral-300">Nome</label>
-              <input id="dev-nome" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="iPhone 15" />
-
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Descrizione</label>
-              <textarea id="dev-desc" class="w-full h-24 p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="128GB, vari colori, garanzia 24 mesi."></textarea>
-
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Prezzo (opzionale)</label>
-              <input id="dev-prezzo" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="€829" />
-
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Immagini dispositivo</label>
-              <div id="dev-images" class="space-y-2">
-                <div class="flex gap-2">
-                  <input class="w-full p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="/assets/devices/iphone15-1.jpg">
-                  <button type="button" class="btn-primary dev-add">+</button>
-                </div>
-              </div>
-              <p class="mt-2 text-xs text-neutral-400">Puoi aggiungere più righe con il pulsante “+”.</p>
-
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Dove lo userai</label>
-              <select id="dev-destinazione" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10">
-                <option value="induno">Pagina Induno</option>
-                <option value="varese">Pagina Varese</option>
-                <option value="entrambi">Entrambe</option>
-              </select>
-
-              <button id="dev-genera" class="mt-4 btn-primary">Genera JSON</button>
-              <button id="dev-save" type="button" class="mt-3 btn-primary">Salva su DB</button>
-              <p id="dev-status" class="mt-2 text-xs text-neutral-400"></p>
-            </div>
-
-            <div>
-              <label class="block mb-1 text-sm text-neutral-300">JSON da aggiungere all’array <code>devices</code></label>
-              <textarea id="dev-output" class="w-full h-64 p-2 border rounded-md bg-neutral-900 border-white/10" readonly></textarea>
-              <div class="flex gap-3 mt-3">
-                <button id="copy-dev" class="btn-primary">Copia</button>
-                <button id="download-dev" class="btn-primary">Scarica .json</button>
-              </div>
-              <p class="mt-3 text-sm text-neutral-400">
-                Incolla il JSON nell’array <code>devices</code> dentro <code>induno.html</code> e/o <code>varese.html</code> (sezione &lt;script type=\"module\"&gt;).
-              </p>
-              <div class="mt-6">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="font-semibold">Dispositivi in DB</h3>
-                  <button id="reload-devices" type="button" class="btn-primary">Ricarica</button>
-                </div>
-                <table class="w-full text-sm table-fixed">
-                  <thead>
-                    <tr>
-                      <th class="px-2 py-1 text-left">Nome</th>
-                      <th class="px-2 py-1">Prezzo</th>
-                      <th class="px-2 py-1">Immagini</th>
-                      <th class="px-2 py-1">Azioni</th>
-                    </tr>
-                  </thead>
-                  <tbody id="devices-list"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ESPORTAZIONI -->
-    <section id="tab-esportazioni" class="section">
-      <div class="container">
-        <h2 class="mb-6 text-3xl font-bold md:text-4xl" data-aos="fade-up">Esportazioni rapide</h2>
-        <div class="card" data-aos="fade-up">
-          <p class="text-neutral-300">
-            Puoi salvare un file <code>devices.json</code> per archivio o versionamento.
-          </p>
-          <div class="flex gap-3 mt-4">
-            <button id="download-devices-empty" class="btn-primary">Scarica devices.json (vuoto)</button>
-          </div>
-        </div>
+        <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3" id="gallery-grid-induno"></div>
+        <p id="gallery-empty-induno" class="hidden mt-2 text-sm text-neutral-400">Nessuna foto trovata per Induno.</p>
       </div>
     </section>
 
     <div id="footer"></div>
 
     <script type="module">
-      import "./main.js";
-      import { renderHeader, renderFooter, enablePageTransitions } from "./components.js";
+      import { renderHeader, renderFooter, renderTeam, enablePageTransitions } from "./components.js";
+      import { supabase } from './lib/supabase.js';
       document.getElementById("header").innerHTML = renderHeader("");
       document.getElementById("footer").innerHTML = renderFooter();
-      enablePageTransitions();
 
-      import "./gestione.js";
+      async function loadGalleryInduno() {
+        const grid = document.getElementById('gallery-grid-induno');
+        const empty = document.getElementById('gallery-empty-induno');
+        try {
+          const { data, error } = await supabase
+            .from('gallery')
+            .select('path')
+            .eq('sede', 'induno')
+            .order('created_at', { ascending: false })
+            .limit(6);
+          if (error) throw error;
+          if (!data || data.length === 0) {
+            empty.classList.remove('hidden');
+            grid.innerHTML = '';
+            return;
+          }
+          const cards = data.map((r, i) => {
+            const { data: pub } = supabase.storage.from('induno-gallery').getPublicUrl(r.path);
+            const url = pub?.publicUrl || `/storage/v1/object/public/induno-gallery/${r.path}`;
+            const delay = i * 50;
+            return `
+              <div class="overflow-hidden card" data-aos="fade-up"${delay ? ` data-aos-delay="${delay}"` : ''}>
+                <img src="${url}" alt="Induno ${i+1}" class="object-cover w-full h-48" />
+              </div>`;
+          }).join('');
+          grid.innerHTML = cards;
+          empty.classList.add('hidden');
+        } catch (e) {
+          console.error('[gallery induno]', e);
+          empty.textContent = 'Errore nel caricamento della galleria.';
+          empty.classList.remove('hidden');
+        }
+      }
+
+      await loadGalleryInduno();
+
+      enablePageTransitions();
     </script>
   </body>
 </html>
