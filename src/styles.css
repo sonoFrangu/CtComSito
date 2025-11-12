@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { scroll-behavior: smooth; }
+
+.btn-primary { @apply inline-flex items-center gap-2 px-5 py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition; }
+.card { @apply rounded-xl border border-white/10 bg-white/5 backdrop-blur p-6 shadow; }
+.nav-link { @apply text-sm md:text-base hover:text-blue-400 transition; }
+.section { @apply py-24 md:py-32; }
+.container { @apply mx-auto max-w-6xl px-6; }
+
+/* ===== Animated Background ===== */
+.bg-animated {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(59,130,246,0.10), transparent 60%),
+              radial-gradient(1000px 500px at 90% 20%, rgba(99,102,241,0.10), transparent 60%),
+              radial-gradient(800px 400px at 50% 90%, rgba(16,185,129,0.08), transparent 60%),
+              #0a0a0a;
+}
+.blob {
+  position: absolute;
+  filter: blur(50px);
+  opacity: .35;
+  mix-blend-mode: screen;
+  animation: floatBlob var(--dur, 26s) ease-in-out infinite;
+}
+.blob--blue    { background: #3b82f6; }
+.blob--violet  { background: #6366f1; }
+.blob--green   { background: #10b981; }
+.blob { width: var(--w, 42vmax); height: var(--h, 42vmax); border-radius: 42vmax; }
+.blob:nth-child(1){ top:-10vmax; left:-10vmax; --dur: 32s; }
+.blob:nth-child(2){ top:15vh; right:-12vmax; --dur: 28s; }
+.blob:nth-child(3){ bottom:-14vmax; left:20vw; --dur: 30s; }
+@keyframes floatBlob { 0% { transform: translate3d(0,0,0) scale(1);} 50% { transform: translate3d(2vmax,-2vmax,0) scale(1.06);} 100% { transform: translate3d(0,0,0) scale(1);} }
+
+/* ===== Page Transitions ===== */
+@keyframes pageIn  { from { opacity:0; transform: translateY(6px) } to { opacity:1; transform:none } }
+@keyframes pageOut { from { opacity:1 } to { opacity:0 } }
+:root { --page-anim: 220ms; }
+.page-enter body { animation: pageIn var(--page-anim) ease-out both; }
+.page-exit  body { animation: pageOut var(--page-anim) ease-in both; }
+
+/* Hover smoother on cards */
+.card { transition: transform .25s ease, box-shadow .25s ease, background .25s ease; }
+.card:hover { transform: translateY(-2px); }
+
+/* ===== Unified Logo Grid ===== */
+.logo-grid { @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4; }
+.logo-cell { @apply card flex items-center justify-center aspect-video; }
+.logo-img { max-height: 40px; width: auto; height: auto; object-fit: contain; opacity: .9; transition: opacity .2s ease; }
+.logo-cell:hover .logo-img { opacity: 1; }

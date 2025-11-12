@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>CT Communication — Gestione</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="text-white bg-neutral-950">
+    <div class="bg-animated" aria-hidden="true">
+      <div class="blob blob--blue"></div>
+      <div class="blob blob--violet"></div>
+      <div class="blob blob--green"></div>
+    </div>
+
+    <div id="header"></div>
+    <div id="admin-lock" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <form id="admin-form" class="w-full max-w-md p-6 card">
+        <h2 class="mb-2 text-2xl font-bold">Area riservata</h2>
+        <p class="mb-4 text-sm text-neutral-300">Inserisci la password per accedere alla gestione.</p>
+        <input id="admin-pass" type="password" class="w-full p-3 border rounded-md bg-neutral-900 border-white/10" placeholder="Password amministratore" autocomplete="current-password" />
+        <p id="admin-error" class="hidden mt-2 text-sm text-red-400">Password errata.</p>
+        <div class="flex gap-3 mt-4">
+          <button type="submit" class="w-full btn-primary">Entra</button>
+          <button type="button" id="admin-logout" class="hidden btn-primary">Esci</button>
+        </div>
+      </form>
+    </div>
+
+    <section class="pt-32 section">
+      <div class="container">
+        <h1 class="text-4xl font-extrabold md:text-5xl" data-aos="fade-up">Gestione contenuti</h1>
+        <p class="mt-2 text-neutral-300" data-aos="fade-up" data-aos-delay="80">
+          Strumenti per generare rapidamente snippet per gallerie e dispositivi. (Niente salvataggio server-side)
+        </p>
+
+        <!-- Tabs -->
+        <div class="grid gap-4 mt-8 md:grid-cols-3">
+          <a href="#tab-foto" class="btn-primary">Aggiungi foto gallerie</a>
+          <a href="#tab-dispositivi" class="btn-primary">Aggiungi dispositivi</a>
+          <a href="#tab-esportazioni" class="btn-primary">Esportazioni</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOTO -->
+    <section id="tab-foto" class="section">
+      <div class="container">
+        <h2 class="mb-6 text-3xl font-bold md:text-4xl" data-aos="fade-up">Nuove foto gallerie</h2>
+
+        <div class="card" data-aos="fade-up">
+          <div class="grid gap-6 md:grid-cols-2">
+            <div>
+              <label class="block mb-1 text-sm text-neutral-300">Sede</label>
+              <select id="foto-sede" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10">
+                <option value="induno">Induno Olona</option>
+                <option value="varese">Varese</option>
+              </select>
+
+              <label class="block mt-4 mb-1 text-sm text-neutral-300">Carica file (drag &amp; drop o seleziona)</label>
+              <div id="foto-drop" class="flex items-center justify-between gap-3 p-4 text-sm border border-dashed rounded-md border-white/20 text-neutral-400">
+                <span>Trascina qui le immagini oppure</span>
+                <label class="cursor-pointer btn-primary">
+                  Seleziona
+                  <input id="foto-input" type="file" accept="image/*" multiple class="hidden">
+                </label>
+              </div>
+              <p class="mt-2 text-xs text-neutral-400">Suggerito: rinomina le immagini come 1.jpg, 2.jpg,… e mettile nella cartella della sede.</p>
+
+              <label class="block mt-4 mb-1 text-sm text-neutral-300">Nomi file (uno per riga)</label>
+              <textarea id="foto-files" class="w-full h-32 p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="1.jpg&#10;2.jpg&#10;3.jpg"></textarea>
+
+              <p class="mt-3 text-sm text-neutral-400">
+                Metti fisicamente i file in <code>/src/assets/&lt;sede&gt;-gallery/</code> (es. <code>/src/assets/induno-gallery/</code>).
+              </p>
+
+              <button id="foto-genera" class="mt-4 btn-primary">Genera snippet</button>
+            </div>
+
+            <div>
+              <label class="block mb-1 text-sm text-neutral-300">Snippet HTML da incollare nella galleria</label>
+              <textarea id="foto-output" class="w-full h-64 p-2 border rounded-md bg-neutral-900 border-white/10" readonly></textarea>
+              <div class="flex gap-3 mt-3">
+                <button id="copy-foto" class="btn-primary">Copia</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- DISPOSITIVI -->
+    <section id="tab-dispositivi" class="section">
+      <div class="container">
+        <h2 class="mb-6 text-3xl font-bold md:text-4xl" data-aos="fade-up">Nuovo dispositivo</h2>
+
+        <div class="card" data-aos="fade-up">
+          <div class="grid gap-6 md:grid-cols-2">
+            <div>
+              <label class="block mb-1 text-sm text-neutral-300">Nome</label>
+              <input id="dev-nome" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="iPhone 15" />
+
+              <label class="block mt-4 mb-1 text-sm text-neutral-300">Descrizione</label>
+              <textarea id="dev-desc" class="w-full h-24 p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="128GB, vari colori, garanzia 24 mesi."></textarea>
+
+              <label class="block mt-4 mb-1 text-sm text-neutral-300">Prezzo (opzionale)</label>
+              <input id="dev-prezzo" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="€829" />
+
+              <label class="block mt-4 mb-1 text-sm text-neutral-300">Immagini dispositivo</label>
+              <div id="dev-images" class="space-y-2">
+                <div class="flex gap-2">
+                  <input class="w-full p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="/assets/devices/iphone15-1.jpg">
+                  <button type="button" class="btn-primary dev-add">+</button>
+                </div>
+              </div>
+              <p class="mt-2 text-xs text-neutral-400">Puoi aggiungere più righe con il pulsante “+”.</p>
+
+              <label class="block mt-4 mb-1 text-sm text-neutral-300">Dove lo userai</label>
+              <select id="dev-destinazione" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10">
+                <option value="induno">Pagina Induno</option>
+                <option value="varese">Pagina Varese</option>
+                <option value="entrambi">Entrambe</option>
+              </select>
+
+              <button id="dev-genera" class="mt-4 btn-primary">Genera JSON</button>
+            </div>
+
+            <div>
+              <label class="block mb-1 text-sm text-neutral-300">JSON da aggiungere all’array <code>devices</code></label>
+              <textarea id="dev-output" class="w-full h-64 p-2 border rounded-md bg-neutral-900 border-white/10" readonly></textarea>
+              <div class="flex gap-3 mt-3">
+                <button id="copy-dev" class="btn-primary">Copia</button>
+                <button id="download-dev" class="btn-primary">Scarica .json</button>
+              </div>
+              <p class="mt-3 text-sm text-neutral-400">
+                Incolla il JSON nell’array <code>devices</code> dentro <code>induno.html</code> e/o <code>varese.html</code> (sezione &lt;script type=\"module\"&gt;).
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ESPORTAZIONI -->
+    <section id="tab-esportazioni" class="section">
+      <div class="container">
+        <h2 class="mb-6 text-3xl font-bold md:text-4xl" data-aos="fade-up">Esportazioni rapide</h2>
+        <div class="card" data-aos="fade-up">
+          <p class="text-neutral-300">
+            Puoi salvare un file <code>devices.json</code> per archivio o versionamento.
+          </p>
+          <div class="flex gap-3 mt-4">
+            <button id="download-devices-empty" class="btn-primary">Scarica devices.json (vuoto)</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="footer"></div>
+
+    <script type="module">
+      import "./main.js";
+      import { renderHeader, renderFooter, enablePageTransitions } from "./components.js";
+      document.getElementById("header").innerHTML = renderHeader("");
+      document.getElementById("footer").innerHTML = renderFooter();
+      enablePageTransitions();
+
+      import "./gestione.js";
+    </script>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+[
+    { "name": "Giulia R.", "role": "Store Manager", "photo": "/assets/team-giulia.jpg" },
+    { "name": "Lorenzo B.", "role": "Tecnico Riparazioni", "photo": "/assets/team-lorenzo.jpg" },
+    { "name": "Sara M.", "role": "Consulente Tariffe", "photo": "/assets/team-sara.jpg" }
+  ]
