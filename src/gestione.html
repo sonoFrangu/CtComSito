@@ -2,214 +2,363 @@
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>CT Communication — Gestione</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body class="text-white bg-neutral-950">
+    <!-- Sfondo animato opzionale -->
     <div class="bg-animated" aria-hidden="true">
       <div class="blob blob--blue"></div>
       <div class="blob blob--violet"></div>
       <div class="blob blob--green"></div>
     </div>
 
-    <div id="header"></div>
-    <div id="admin-lock" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <form id="admin-form" class="w-full max-w-md p-6 card">
-        <h2 class="mb-2 text-2xl font-bold">Area riservata</h2>
-        <p class="mb-4 text-sm text-neutral-300">Inserisci la password per accedere alla gestione.</p>
-        <input id="admin-pass" type="password" class="w-full p-3 border rounded-md bg-neutral-900 border-white/10" placeholder="Password amministratore" autocomplete="current-password" />
-        <p id="admin-error" class="hidden mt-2 text-sm text-red-400">Password errata.</p>
-        <div class="flex gap-3 mt-4">
-          <button type="submit" class="w-full btn-primary">Entra</button>
-          <button type="button" id="admin-logout" class="hidden btn-primary">Esci</button>
-        </div>
+    <!-- Overlay password -->
+    <div id="lock" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <form id="lock-form" class="w-full max-w-sm p-6 card">
+        <h1 class="mb-2 text-2xl font-bold">Area riservata</h1>
+        <p class="mb-4 text-sm text-neutral-300">Inserisci la password per accedere.</p>
+        <input id="lock-pass" type="password" class="w-full p-3 border rounded-md bg-neutral-900 border-white/10" placeholder="Password" />
+        <p id="lock-err" class="hidden mt-2 text-sm text-red-400">Password errata.</p>
+        <button class="w-full mt-4 btn-primary" type="submit">Entra</button>
       </form>
     </div>
 
-    <section class="pt-32 section">
-      <div class="container">
-        <h1 class="text-4xl font-extrabold md:text-5xl" data-aos="fade-up">Gestione contenuti</h1>
-        <p class="mt-2 text-neutral-300" data-aos="fade-up" data-aos-delay="80">
-          Strumenti per generare rapidamente snippet per gallerie e dispositivi. (Niente salvataggio server-side)
-        </p>
+    <main class="pt-10 md:pt-16">
+      <section class="section">
+        <div class="container">
+          <h1 class="text-4xl font-extrabold md:text-5xl">Gestione contenuti</h1>
+          <p class="mt-2 text-neutral-300">Carica o elimina foto della galleria (max 6 per sede). Aggiungi o elimina dispositivi.</p>
 
-        <!-- Tabs -->
-        <div class="grid gap-4 mt-8 md:grid-cols-3">
-          <a href="#tab-foto" class="btn-primary">Aggiungi foto gallerie</a>
-          <a href="#tab-dispositivi" class="btn-primary">Aggiungi dispositivi</a>
-          <a href="#tab-esportazioni" class="btn-primary">Esportazioni</a>
+          <!-- Tabs semplificate -->
+          <div class="grid gap-4 mt-6 md:grid-cols-2">
+            <a href="#galleria" class="btn-primary">Galleria</a>
+            <a href="#dispositivi" class="btn-primary">Dispositivi</a>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- FOTO -->
-    <section id="tab-foto" class="section">
-      <div class="container">
-        <h2 class="mb-6 text-3xl font-bold md:text-4xl" data-aos="fade-up">Nuove foto gallerie</h2>
+      <!-- GALLERIA -->
+      <section id="galleria" class="section">
+        <div class="container">
+          <div class="flex items-center justify-between gap-4">
+            <h2 class="text-3xl font-bold md:text-4xl">Galleria negozi</h2>
+            <button id="gallery-reload" class="btn-primary">Ricarica</button>
+          </div>
 
-        <div class="card" data-aos="fade-up">
-          <div class="grid gap-6 md:grid-cols-2">
-            <div>
-              <label class="block mb-1 text-sm text-neutral-300">Sede</label>
-              <select id="foto-sede" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10">
+          <div class="grid gap-6 mt-4 md:grid-cols-2">
+            <!-- Colonna sinistra: upload e limiti -->
+            <div class="p-4 card">
+              <label class="block text-sm text-neutral-300">Sede</label>
+              <select id="gal-sede" class="w-full p-2 mt-1 border rounded-md bg-neutral-900 border-white/10">
                 <option value="induno">Induno Olona</option>
                 <option value="varese">Varese</option>
               </select>
+
               <p class="mt-3 text-sm text-neutral-300">Limite: massimo <strong>6 foto per sede</strong>.</p>
-              <div class="flex items-center gap-3 mt-2">
-                <button id="reload-gallery" type="button" class="btn-primary">Ricarica galleria</button>
-                <span class="text-xs text-neutral-400">Induno: <span id="count-induno">0</span>/6 • Varese: <span id="count-varese">0</span>/6</span>
-              </div>
-              <div class="grid gap-4 mt-3 md:grid-cols-2">
-                <div>
-                  <h3 class="mb-2 font-semibold">Induno</h3>
-                  <table class="w-full text-sm table-fixed">
-                    <thead><tr><th class="px-2 py-1 text-left">File</th><th class="px-2 py-1">Preview</th><th class="px-2 py-1">Azioni</th></tr></thead>
-                    <tbody id="gallery-list-induno"></tbody>
-                  </table>
-                </div>
-                <div>
-                  <h3 class="mb-2 font-semibold">Varese</h3>
-                  <table class="w-full text-sm table-fixed">
-                    <thead><tr><th class="px-2 py-1 text-left">File</th><th class="px-2 py-1">Preview</th><th class="px-2 py-1">Azioni</th></tr></thead>
-                    <tbody id="gallery-list-varese"></tbody>
-                  </table>
-                </div>
-              </div>
-
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Carica file (drag &amp; drop o seleziona)</label>
-              <div id="foto-drop" class="flex items-center justify-between gap-3 p-4 text-sm border border-dashed rounded-md border-white/20 text-neutral-400">
-                <span>Trascina qui le immagini oppure</span>
-                <label class="cursor-pointer btn-primary">
-                  Seleziona
-                  <input id="foto-input" type="file" accept="image/*" multiple class="hidden">
-                </label>
-              </div>
-              <p class="mt-2 text-xs text-neutral-400">Suggerito: rinomina le immagini come 1.jpg, 2.jpg,… e mettile nella cartella della sede.</p>
-
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Nomi file (uno per riga)</label>
-              <textarea id="foto-files" class="w-full h-32 p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="1.jpg&#10;2.jpg&#10;3.jpg"></textarea>
-
-              <p class="mt-3 text-sm text-neutral-400">
-                Metti fisicamente i file in <code>/src/assets/&lt;sede&gt;-gallery/</code> (es. <code>/src/assets/induno-gallery/</code>).
+              <p class="mt-1 text-xs text-neutral-400">
+                Stato — Induno: <span id="cnt-induno">0</span>/6 • Varese: <span id="cnt-varese">0</span>/6
               </p>
 
-              <button id="foto-genera" class="mt-4 btn-primary">Genera snippet</button>
-              <button id="foto-upload" type="button" class="mt-2 btn-primary">Carica su Supabase</button>
-              <p id="foto-status" class="mt-2 text-xs text-neutral-400"></p>
-            </div>
-
-            <div>
-              <label class="block mb-1 text-sm text-neutral-300">Snippet HTML da incollare nella galleria</label>
-              <textarea id="foto-output" class="w-full h-64 p-2 border rounded-md bg-neutral-900 border-white/10" readonly></textarea>
-              <div class="flex gap-3 mt-3">
-                <button id="copy-foto" class="btn-primary">Copia</button>
+              <label class="block mt-4 mb-1 text-sm text-neutral-300">Carica file (drag &amp; drop o seleziona)</label>
+              <div id="gal-drop" class="flex items-center justify-between gap-3 p-4 text-sm border border-dashed rounded-md border-white/20 text-neutral-400">
+                <span>Trascina qui le immagini</span>
+                <label class="cursor-pointer btn-primary">
+                  Seleziona
+                  <input id="gal-input" type="file" accept="image/*" multiple class="hidden" />
+                </label>
               </div>
+
+              <button id="gal-upload" class="mt-3 btn-primary">Carica su Supabase</button>
+              <p id="gal-status" class="mt-2 text-xs text-neutral-400"></p>
             </div>
-          </div>
-        </div>
 
-      </div>
-    </section>
-
-    <!-- DISPOSITIVI -->
-    <section id="tab-dispositivi" class="section">
-      <div class="container">
-        <h2 class="mb-6 text-3xl font-bold md:text-4xl" data-aos="fade-up">Nuovo dispositivo</h2>
-
-        <div class="card" data-aos="fade-up">
-          <div class="grid gap-6 md:grid-cols-2">
+            <!-- Colonna destra: liste e azioni -->
             <div>
-              <label class="block mb-1 text-sm text-neutral-300">Nome</label>
-              <input id="dev-nome" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="iPhone 15" />
+              <div class="grid gap-6 md:grid-cols-2">
+                <div class="p-4 card">
+                  <div class="flex items-center justify-between">
+                    <h3 class="font-semibold">Induno</h3>
+                  </div>
+                  <table class="w-full mt-2 text-sm table-fixed">
+                    <thead>
+                      <tr>
+                        <th class="px-2 py-1 text-left">File</th>
+                        <th class="px-2 py-1">Preview</th>
+                        <th class="px-2 py-1">Azioni</th>
+                      </tr>
+                    </thead>
+                    <tbody id="gal-list-induno"></tbody>
+                  </table>
+                </div>
 
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Descrizione</label>
-              <textarea id="dev-desc" class="w-full h-24 p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="128GB, vari colori, garanzia 24 mesi."></textarea>
-
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Prezzo (opzionale)</label>
-              <input id="dev-prezzo" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="€829" />
-
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Immagini dispositivo</label>
-              <div id="dev-images" class="space-y-2">
-                <div class="flex gap-2">
-                  <input class="w-full p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="/assets/devices/iphone15-1.jpg">
-                  <button type="button" class="btn-primary dev-add">+</button>
+                <div class="p-4 card">
+                  <div class="flex items-center justify-between">
+                    <h3 class="font-semibold">Varese</h3>
+                  </div>
+                  <table class="w-full mt-2 text-sm table-fixed">
+                    <thead>
+                      <tr>
+                        <th class="px-2 py-1 text-left">File</th>
+                        <th class="px-2 py-1">Preview</th>
+                        <th class="px-2 py-1">Azioni</th>
+                      </tr>
+                    </thead>
+                    <tbody id="gal-list-varese"></tbody>
+                  </table>
                 </div>
               </div>
-              <p class="mt-2 text-xs text-neutral-400">Puoi aggiungere più righe con il pulsante “+”.</p>
+            </div>
+          </div> <!-- /grid -->
+        </div>
+      </section>
 
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Dove lo userai</label>
-              <select id="dev-destinazione" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10">
-                <option value="induno">Pagina Induno</option>
-                <option value="varese">Pagina Varese</option>
-                <option value="entrambi">Entrambe</option>
-              </select>
+      <!-- DISPOSITIVI -->
+      <section id="dispositivi" class="section">
+        <div class="container">
+          <div class="flex items-center justify-between gap-4">
+            <h2 class="text-3xl font-bold md:text-4xl">Dispositivi</h2>
+            <button id="dev-reload" class="btn-primary">Ricarica</button>
+          </div>
 
-              <button id="dev-genera" class="mt-4 btn-primary">Genera JSON</button>
-              <button id="dev-save" type="button" class="mt-3 btn-primary">Salva su DB</button>
+          <div class="grid gap-6 mt-4 md:grid-cols-2">
+            <!-- form -->
+            <div class="p-4 card">
+              <label class="block text-sm text-neutral-300">Nome</label>
+              <input id="dev-name" class="w-full p-2 mt-1 border rounded-md bg-neutral-900 border-white/10" placeholder="iPhone 15" />
+
+              <label class="block mt-4 text-sm text-neutral-300">Descrizione</label>
+              <textarea id="dev-desc" class="w-full h-24 p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="128GB, vari colori, garanzia 24 mesi."></textarea>
+
+              <label class="block mt-4 text-sm text-neutral-300">Prezzo (opzionale)</label>
+              <input id="dev-price" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="€829" />
+
+              <label class="block mt-4 text-sm text-neutral-300">Immagini (URL pubblici - uno per riga)</label>
+              <textarea id="dev-images" class="w-full h-24 p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="/storage/v1/object/public/devices/iphone15-1.jpg&#10;/storage/v1/object/public/devices/iphone15-2.jpg"></textarea>
+
+              <div class="flex gap-3 mt-4">
+                <button id="dev-save" class="btn-primary">Salva su DB</button>
+                <button id="dev-clear" class="btn-primary" type="button">Pulisci</button>
+              </div>
               <p id="dev-status" class="mt-2 text-xs text-neutral-400"></p>
             </div>
 
-            <div>
-              <label class="block mb-1 text-sm text-neutral-300">JSON da aggiungere all’array <code>devices</code></label>
-              <textarea id="dev-output" class="w-full h-64 p-2 border rounded-md bg-neutral-900 border-white/10" readonly></textarea>
-              <div class="flex gap-3 mt-3">
-                <button id="copy-dev" class="btn-primary">Copia</button>
-                <button id="download-dev" class="btn-primary">Scarica .json</button>
-              </div>
-              <p class="mt-3 text-sm text-neutral-400">
-                Incolla il JSON nell’array <code>devices</code> dentro <code>induno.html</code> e/o <code>varese.html</code> (sezione &lt;script type=\"module\"&gt;).
-              </p>
-              <div class="mt-6">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="font-semibold">Dispositivi in DB</h3>
-                  <button id="reload-devices" type="button" class="btn-primary">Ricarica</button>
-                </div>
-                <table class="w-full text-sm table-fixed">
-                  <thead>
-                    <tr>
-                      <th class="px-2 py-1 text-left">Nome</th>
-                      <th class="px-2 py-1">Prezzo</th>
-                      <th class="px-2 py-1">Immagini</th>
-                      <th class="px-2 py-1">Azioni</th>
-                    </tr>
-                  </thead>
-                  <tbody id="devices-list"></tbody>
-                </table>
-              </div>
+            <!-- elenco -->
+            <div class="p-4 card">
+              <table class="w-full text-sm table-fixed">
+                <thead>
+                  <tr>
+                    <th class="px-2 py-1 text-left">Nome</th>
+                    <th class="px-2 py-1">Prezzo</th>
+                    <th class="px-2 py-1">Img</th>
+                    <th class="px-2 py-1">Azioni</th>
+                  </tr>
+                </thead>
+                <tbody id="dev-list"></tbody>
+              </table>
             </div>
           </div>
         </div>
-
-      </div>
-    </section>
-
-    <!-- ESPORTAZIONI -->
-    <section id="tab-esportazioni" class="section">
-      <div class="container">
-        <h2 class="mb-6 text-3xl font-bold md:text-4xl" data-aos="fade-up">Esportazioni rapide</h2>
-        <div class="card" data-aos="fade-up">
-          <p class="text-neutral-300">
-            Puoi salvare un file <code>devices.json</code> per archivio o versionamento.
-          </p>
-          <div class="flex gap-3 mt-4">
-            <button id="download-devices-empty" class="btn-primary">Scarica devices.json (vuoto)</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div id="footer"></div>
+      </section>
+    </main>
 
     <script type="module">
-      import "./main.js";
-      import { renderHeader, renderFooter, enablePageTransitions } from "./components.js";
-      document.getElementById("header").innerHTML = renderHeader("");
-      document.getElementById("footer").innerHTML = renderFooter();
-      enablePageTransitions();
+      import { supabase } from './lib/supabase.js';
 
-      import "./gestione.js";
+      // ===== Password semplice (client-side) =====
+      const PASS = "Negozio2025!";
+      const lock = document.getElementById('lock');
+      const lockForm = document.getElementById('lock-form');
+      const lockPass = document.getElementById('lock-pass');
+      const lockErr = document.getElementById('lock-err');
+
+      lockForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if ((lockPass.value || "") === PASS) {
+          lock.style.display = 'none';
+          document.documentElement.classList.remove('overflow-hidden');
+          lockPass.value = '';
+        } else {
+          lockErr.classList.remove('hidden');
+          lockPass.focus();
+        }
+      });
+
+      // ===== Helpers =====
+      const $ = (id) => document.getElementById(id);
+      function priceToNumber(p) {
+        if (!p) return null;
+        return Number(String(p).replace(/[^0-9.,]/g,'').replace(',','.')) || null;
+      }
+
+      // ====== GALLERIA ======
+      const galSede = $('gal-sede');
+      const galDrop = $('gal-drop');
+      const galInput = $('gal-input');
+      const galUpload = $('gal-upload');
+      const galStatus = $('gal-status');
+      const galReload = $('gallery-reload');
+      const listInduno = $('gal-list-induno');
+      const listVarese = $('gal-list-varese');
+      const cntInduno = $('cnt-induno');
+      const cntVarese = $('cnt-varese');
+
+      // DnD
+      function preventDefaults(e){ e.preventDefault(); e.stopPropagation(); }
+      ['dragenter','dragover','dragleave','drop'].forEach(ev => galDrop.addEventListener(ev, preventDefaults));
+      galDrop.addEventListener('dragover', () => galDrop.classList.add('ring-1','ring-green-400/40'));
+      galDrop.addEventListener('dragleave', () => galDrop.classList.remove('ring-1','ring-green-400/40'));
+      galDrop.addEventListener('drop', (e) => {
+        galDrop.classList.remove('ring-1','ring-green-400/40');
+        const dt = e.dataTransfer;
+        if (dt?.files?.length) galInput.files = dt.files;
+      });
+
+      galReload.addEventListener('click', loadGallery);
+
+      async function loadGallery(){
+        const { data, error } = await supabase.from('gallery').select('id,sede,path,created_at').order('created_at',{ascending:false});
+        if (error) { console.error(error); return; }
+        const ind = data.filter(r=>r.sede==='induno');
+        const varg = data.filter(r=>r.sede==='varese');
+
+        cntInduno.textContent = ind.length;
+        cntVarese.textContent = varg.length;
+
+        renderTbl(listInduno, 'induno', ind);
+        renderTbl(listVarese, 'varese', varg);
+
+        // blocca upload se raggiunto limite della sede selezionata
+        const len = galSede.value === 'induno' ? ind.length : varg.length;
+        galUpload.disabled = len >= 6;
+        galUpload.classList.toggle('opacity-50', len >= 6);
+      }
+
+      function renderTbl(tbody, sede, rows){
+        tbody.innerHTML = rows.map(r=>{
+          const { data:pub } = supabase.storage.from(`${sede}-gallery`).getPublicUrl(r.path);
+          const url = pub?.publicUrl || `/storage/v1/object/public/${sede}-gallery/${r.path}`;
+          return `
+          <tr>
+            <td class="px-2 py-1 truncate">${r.path}</td>
+            <td class="px-2 py-1"><img src="${url}" alt="${r.path}" class="inline-block object-cover w-16 h-10 rounded" /></td>
+            <td class="px-2 py-1">
+              <button class="btn-primary gal-del" data-id="${r.id}" data-sede="${sede}" data-path="${r.path}">Elimina</button>
+            </td>
+          </tr>`;
+        }).join('');
+      }
+
+      [listInduno, listVarese].forEach(tbl=>{
+        tbl.addEventListener('click', async (e)=>{
+          const btn = e.target.closest('.gal-del'); if(!btn) return;
+          if(!confirm('Eliminare questa immagine?')) return;
+          const id = Number(btn.dataset.id);
+          const sede = btn.dataset.sede;
+          const path = btn.dataset.path;
+          await supabase.storage.from(`${sede}-gallery`).remove([path]);
+          await supabase.from('gallery').delete().eq('id', id);
+          await loadGallery();
+        });
+      });
+
+      galUpload.addEventListener('click', async ()=>{
+        galStatus.textContent = '';
+        const sede = galSede.value; const bucket = `${sede}-gallery`;
+        // quante restano?
+        const { data: now } = await supabase.from('gallery').select('id').eq('sede', sede);
+        const already = (now||[]).length;
+        const remaining = Math.max(0, 6 - already);
+        if (remaining === 0) { galStatus.textContent = 'Limite raggiunto (6). Elimina qualcosa prima.'; return; }
+        if (!galInput.files || galInput.files.length === 0) { galInput.click(); galStatus.textContent = 'Seleziona file, poi riprova.'; return; }
+
+        let ok=0;
+        const files = Array.from(galInput.files).slice(0, remaining);
+        for (const file of files){
+          const filePath = `${Date.now()}-${file.name}`.replace(/\s+/g,'_');
+          const { error: upErr } = await supabase.storage.from(bucket).upload(filePath, file, { cacheControl:'3600', upsert:false });
+          if (upErr) { console.error(upErr); galStatus.textContent='Errore upload.'; return; }
+          const { error: insErr } = await supabase.from('gallery').insert({ sede, path:filePath });
+          if (insErr) { console.error(insErr); galStatus.textContent='Errore DB.'; return; }
+          ok++;
+        }
+        galStatus.textContent = `Caricate ${ok} immagini.`;
+        galInput.value = '';
+        await loadGallery();
+      });
+
+      galSede.addEventListener('change', loadGallery);
+
+      // ====== DISPOSITIVI ======
+      const devName = $('dev-name');
+      const devDesc = $('dev-desc');
+      const devPrice = $('dev-price');
+      const devImages = $('dev-images');
+      const devSave = $('dev-save');
+      const devClear = $('dev-clear');
+      const devStatus = $('dev-status');
+      const devList = $('dev-list');
+      const devReload = $('dev-reload');
+
+      devReload.addEventListener('click', loadDevices);
+      devClear.addEventListener('click', ()=>{
+        devName.value=''; devDesc.value=''; devPrice.value=''; devImages.value='';
+        devStatus.textContent='';
+      });
+
+      devSave.addEventListener('click', async ()=>{
+        try {
+          devStatus.textContent='Salvataggio...';
+          const name = devName.value.trim();
+          const descr = devDesc.value.trim();
+          const price = priceToNumber(devPrice.value.trim());
+          const images = devImages.value
+            .split('\n')
+            .map(s=>s.trim())
+            .filter(Boolean);
+          if (!name || !descr) { devStatus.textContent='Nome e descrizione sono obbligatori.'; return; }
+          const { error } = await supabase.from('devices').insert({ name, descr, price, images });
+          if (error) throw error;
+          devStatus.textContent='Dispositivo salvato!';
+          devClear.click();
+          await loadDevices();
+        } catch (e) {
+          console.error(e);
+          devStatus.textContent='Errore durante il salvataggio.';
+        }
+      });
+
+      async function loadDevices(){
+        const { data, error } = await supabase.from('devices').select('id,name,price,images').order('created_at',{ascending:false});
+        if (error){ console.error(error); return; }
+        devList.innerHTML = (data||[]).map(r=>{
+          const imgs = Array.isArray(r.images) ? r.images.length : 0;
+          const price = r.price==null ? '—' : `€${Number(r.price).toFixed(2)}`;
+          return `
+          <tr>
+            <td class="px-2 py-1 text-left">${r.name}</td>
+            <td class="px-2 py-1 text-center">${price}</td>
+            <td class="px-2 py-1 text-center">${imgs}</td>
+            <td class="px-2 py-1 text-center">
+              <button class="btn-primary dev-del" data-id="${r.id}">Elimina</button>
+            </td>
+          </tr>`;
+        }).join('');
+      }
+
+      devList.addEventListener('click', async (e)=>{
+        const btn = e.target.closest('.dev-del'); if(!btn) return;
+        if(!confirm('Eliminare questo dispositivo?')) return;
+        const id = Number(btn.dataset.id);
+        const { error } = await supabase.from('devices').delete().eq('id', id);
+        if (error) { console.error(error); return; }
+        await loadDevices();
+      });
+
+      // bootstrap
+      await loadGallery();
+      await loadDevices();
     </script>
   </body>
 </html>
