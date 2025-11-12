@@ -1,26 +1,11 @@
 {
-  "name": "sito-ctcommunication",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "serve": "node server.js"
-  },
-  "dependencies": {
-    "aos": "^2.3.4",
-    "express": "^4.19.2"
-  },
-  "devDependencies": {
-    "autoprefixer": "^10.4.22",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.18",
-    "vite": "^7.2.2"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "packageManager": "npm@10.9.0"
+  "framework": "vite",
+  "buildCommand": "npm ci && npm run build",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/induno", "destination": "/induno.html" },
+    { "source": "/varese", "destination": "/varese.html" },
+    { "source": "/gestione", "destination": "/gestione.html" }
+  ]
 }
