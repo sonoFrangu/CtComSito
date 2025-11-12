@@ -56,6 +56,27 @@
                 <option value="induno">Induno Olona</option>
                 <option value="varese">Varese</option>
               </select>
+              <p class="mt-3 text-sm text-neutral-300">Limite: massimo <strong>6 foto per sede</strong>.</p>
+              <div class="flex items-center gap-3 mt-2">
+                <button id="reload-gallery" type="button" class="btn-primary">Ricarica galleria</button>
+                <span class="text-xs text-neutral-400">Induno: <span id="count-induno">0</span>/6 • Varese: <span id="count-varese">0</span>/6</span>
+              </div>
+              <div class="grid gap-4 mt-3 md:grid-cols-2">
+                <div>
+                  <h3 class="mb-2 font-semibold">Induno</h3>
+                  <table class="w-full text-sm table-fixed">
+                    <thead><tr><th class="px-2 py-1 text-left">File</th><th class="px-2 py-1">Preview</th><th class="px-2 py-1">Azioni</th></tr></thead>
+                    <tbody id="gallery-list-induno"></tbody>
+                  </table>
+                </div>
+                <div>
+                  <h3 class="mb-2 font-semibold">Varese</h3>
+                  <table class="w-full text-sm table-fixed">
+                    <thead><tr><th class="px-2 py-1 text-left">File</th><th class="px-2 py-1">Preview</th><th class="px-2 py-1">Azioni</th></tr></thead>
+                    <tbody id="gallery-list-varese"></tbody>
+                  </table>
+                </div>
+              </div>
 
               <label class="block mt-4 mb-1 text-sm text-neutral-300">Carica file (drag &amp; drop o seleziona)</label>
               <div id="foto-drop" class="flex items-center justify-between gap-3 p-4 text-sm border border-dashed rounded-md border-white/20 text-neutral-400">
@@ -75,6 +96,8 @@
               </p>
 
               <button id="foto-genera" class="mt-4 btn-primary">Genera snippet</button>
+              <button id="foto-upload" type="button" class="mt-2 btn-primary">Carica su Supabase</button>
+              <p id="foto-status" class="mt-2 text-xs text-neutral-400"></p>
             </div>
 
             <div>
@@ -124,6 +147,8 @@
               </select>
 
               <button id="dev-genera" class="mt-4 btn-primary">Genera JSON</button>
+              <button id="dev-save" type="button" class="mt-3 btn-primary">Salva su DB</button>
+              <p id="dev-status" class="mt-2 text-xs text-neutral-400"></p>
             </div>
 
             <div>
@@ -136,6 +161,23 @@
               <p class="mt-3 text-sm text-neutral-400">
                 Incolla il JSON nell’array <code>devices</code> dentro <code>induno.html</code> e/o <code>varese.html</code> (sezione &lt;script type=\"module\"&gt;).
               </p>
+              <div class="mt-6">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="font-semibold">Dispositivi in DB</h3>
+                  <button id="reload-devices" type="button" class="btn-primary">Ricarica</button>
+                </div>
+                <table class="w-full text-sm table-fixed">
+                  <thead>
+                    <tr>
+                      <th class="px-2 py-1 text-left">Nome</th>
+                      <th class="px-2 py-1">Prezzo</th>
+                      <th class="px-2 py-1">Immagini</th>
+                      <th class="px-2 py-1">Azioni</th>
+                    </tr>
+                  </thead>
+                  <tbody id="devices-list"></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
