@@ -16,12 +16,15 @@
 
     <!-- Overlay password -->
     <div id="lock" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <form id="lock-form" class="w-full max-w-sm p-6 card">
+      <form id="lock-form" class="w-full max-w-sm p-6 card" novalidate autocomplete="off">
         <h1 class="mb-2 text-2xl font-bold">Area riservata</h1>
         <p class="mb-4 text-sm text-neutral-300">Inserisci la password per accedere.</p>
         <input id="lock-pass" type="password" class="w-full p-3 border rounded-md bg-neutral-900 border-white/10" placeholder="Password" />
+        <label class="flex items-center gap-2 mt-2 text-sm text-neutral-300">
+          <input id="lock-show" type="checkbox" class="accent-green-500" /> Mostra password
+        </label>
         <p id="lock-err" class="hidden mt-2 text-sm text-red-400">Password errata.</p>
-        <button class="w-full mt-4 btn-primary" type="submit">Entra</button>
+        <button id="lock-submit" class="w-full mt-4 btn-primary" type="button">Entra</button>
       </form>
     </div>
 
@@ -163,27 +166,55 @@
       </section>
     </main>
 
+    <script>
+      (function(){
+        const PASS = 'Negozio2025!';
+        const lock = document.getElementById('lock');
+        const form = document.getElementById('lock-form');
+        const pass = document.getElementById('lock-pass');
+        const err  = document.getElementById('lock-err');
+        const show = document.getElementById('lock-show');
+        const btn  = document.getElementById('lock-submit');
+
+        if (!lock || !form || !pass || !btn) {
+          console.error('[Gestione] Password overlay non inizializzato');
+          return;
+        }
+
+        // blocca scroll finché non loggato
+        document.documentElement.classList.add('overflow-hidden');
+
+        // toggle mostra password
+        if (show) {
+          show.addEventListener('change', function(){
+            pass.type = this.checked ? 'text' : 'password';
+          });
+        }
+
+        function tryLogin() {
+          err.classList.add('hidden');
+          const input = (pass.value || '').trim().normalize('NFC');
+          const ok = input === PASS;
+          if (ok) {
+            lock.style.display = 'none';
+            document.documentElement.classList.remove('overflow-hidden');
+            pass.value = '';
+          } else {
+            err.textContent = 'Password errata. Ricontrolla maiuscole/minuscole e spazi.';
+            err.classList.remove('hidden');
+            pass.focus();
+          }
+        }
+
+        // click esplicito sul bottone
+        btn.addEventListener('click', tryLogin);
+        // invio da tastiera dentro il form
+        form.addEventListener('submit', function(ev){ ev.preventDefault(); tryLogin(); });
+      })();
+    </script>
+
     <script type="module">
       import { supabase } from './lib/supabase.js';
-
-      // ===== Password semplice (client-side) =====
-      const PASS = "Negozio2025!";
-      const lock = document.getElementById('lock');
-      const lockForm = document.getElementById('lock-form');
-      const lockPass = document.getElementById('lock-pass');
-      const lockErr = document.getElementById('lock-err');
-
-      lockForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        if ((lockPass.value || "") === PASS) {
-          lock.style.display = 'none';
-          document.documentElement.classList.remove('overflow-hidden');
-          lockPass.value = '';
-        } else {
-          lockErr.classList.remove('hidden');
-          lockPass.focus();
-        }
-      });
 
       // ===== Helpers =====
       const $ = (id) => document.getElementById(id);
