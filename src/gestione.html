@@ -201,6 +201,26 @@
 
     const $ = (id) => document.getElementById(id);
 
+    // Helper per popup di debug
+    function showError(scope, error) {
+      const msg = typeof error === 'string'
+        ? error
+        : (error && error.message) ? error.message : JSON.stringify(error);
+      console.error('ERRORE', scope, error);
+      alert('ERRORE ' + scope + ': ' + msg);
+    }
+
+    function showInfo(message) {
+      console.log('INFO:', message);
+      alert(message);
+    }
+
+    if (!supabaseUrl || !supabaseKey) {
+      showError('configurazione', 'VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY non sono impostate.');
+    } else {
+      console.log('Supabase configurato:', supabaseUrl);
+    }
+
     // --- GALLERIA ELEMENTS ---
     const galSede = $('gal-sede');
     const galInput = $('gal-input');
@@ -283,7 +303,7 @@
         .eq('sede', sede);
 
       if (error){
-        console.error(error);
+        showError('countBySede(' + sede + ')', error);
         return 0;
       }
       return (data || []).length;
@@ -321,10 +341,14 @@
 
       if (error){
         galStatus.textContent = 'Errore DB (gallery): ' + (error.message || error);
+        showError('loadGallery', error);
         return;
       }
 
       const rows = data || [];
+      console.log('loadGallery ok, righe:', rows.length);
+      // Popup leggero per debug iniziale
+      // showInfo('Galleria caricata: ' + rows.length + ' elementi totali');
       const ind = rows.filter(r => r.sede === 'induno');
       const va  = rows.filter(r => r.sede === 'varese');
 
@@ -351,7 +375,7 @@
           .remove([path]);
 
         if (delStorageErr){
-          alert('Errore rimozione file: ' + (delStorageErr.message || delStorageErr));
+          showError('rimozione file storage', delStorageErr);
           return;
         }
 
@@ -362,7 +386,7 @@
           .eq('id', Number(id));
 
         if (delDbErr){
-          alert('Errore rimozione DB: ' + (delDbErr.message || delDbErr));
+          showError('rimozione record gallery', delDbErr);
           return;
         }
 
@@ -381,6 +405,7 @@
       // blocco se non hai ancora inserito la password
       if (document.getElementById('lock')?.style.display !== 'none'){
         galStatus.textContent = 'Sblocca con password per procedere.';
+        showInfo('Devi prima inserire la password per usare il pannello.');
         return;
       }
 
@@ -391,6 +416,7 @@
 
       if (!bufferFiles.length){
         galStatus.textContent = 'Seleziona immagini prima di caricare.';
+        showInfo('Nessun file selezionato per l\'upload.');
         return;
       }
 
@@ -399,6 +425,7 @@
 
       if (remaining === 0){
         galStatus.textContent = 'Limite raggiunto (6). Elimina prima qualche foto.';
+        showInfo('Limite di 6 immagini per la sede "' + sede + '" già raggiunto.');
         return;
       }
 
@@ -419,6 +446,7 @@
         if (upErr){
           row.textContent = `Errore upload ${file.name}: ${upErr.message || upErr}`;
           row.className = 'text-red-400';
+          showError('upload storage ' + file.name, upErr);
           continue;
         }
 
@@ -431,6 +459,7 @@
         if (insErr){
           row.textContent = `Errore DB ${file.name}: ${insErr.message || insErr}`;
           row.className = 'text-red-400';
+          showError('insert gallery ' + file.name, insErr);
           continue;
         }
 
@@ -485,9 +514,11 @@
 
       if (error){
         devStatus.textContent = 'Errore DB (devices): ' + (error.message || error);
+        showError('loadDevices', error);
         return;
       }
 
+      console.log('loadDevices ok, dispositivi:', (data || []).length);
       devList.innerHTML = (data || []).map(deviceRow).join('');
     }
 
@@ -511,7 +542,7 @@
       const descr = (devDesc.value || '').trim();
       const price = priceToNumber((devPrice.value || '').trim());
       const images = (devImages.value || '')
-        .split('\\n')
+        .split('\n')
         .map(s => s.trim())
         .filter(Boolean);
 
@@ -526,6 +557,7 @@
 
       if (error){
         devStatus.textContent = 'Errore DB: ' + (error.message || error);
+        showError('insert device', error);
         return;
       }
 
@@ -549,7 +581,7 @@
           .delete()
           .eq('id', id);
         if (error){
-          alert('Errore DB: ' + (error.message || error));
+          showError('delete device', error);
           return;
         }
         await loadDevices();
@@ -565,18 +597,18 @@
           .single();
 
         if (error){
-          alert('Errore lettura: ' + (error.message || error));
+          showError('read device ' + id, error);
           return;
         }
 
         const newName = prompt('Nome', data.name ?? '') ?? data.name;
         const newDescr = prompt('Descrizione', data.descr ?? '') ?? data.descr;
         const priceStr = prompt('Prezzo (vuoto per nessuno)', data.price == null ? '' : String(data.price)) ?? (data.price == null ? '' : String(data.price));
-        const imagesStr = prompt('Immagini (URL separati da newline)', Array.isArray(data.images) ? data.images.join('\\n') : '') ?? (Array.isArray(data.images) ? data.images.join('\\n') : '');
+        const imagesStr = prompt('Immagini (URL separati da newline)', Array.isArray(data.images) ? data.images.join('\n') : '') ?? (Array.isArray(data.images) ? data.images.join('\n') : '');
 
         const newPrice = priceStr.trim() === '' ? null : priceToNumber(priceStr);
         const newImages = imagesStr
-          .split('\\n')
+          .split('\n')
           .map(s => s.trim())
           .filter(Boolean);
 
@@ -586,7 +618,7 @@
           .eq('id', id);
 
         if (uErr){
-          alert('Errore salvataggio: ' + (uErr.message || uErr));
+          showError('update device ' + id, uErr);
           return;
         }
 
@@ -597,8 +629,11 @@
 
     // --- AVVIO ---
     (async () => {
+      console.log('Inizializzazione pannello gestione...');
+      showInfo('Pannello gestione inizializzato (gestione.html)');
       await loadGallery();
       await loadDevices();
+      console.log('Pannello gestione pronto.');
     })();
   </script>
 </body>
