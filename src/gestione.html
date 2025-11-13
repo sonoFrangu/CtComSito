@@ -1,395 +1,605 @@
 <!doctype html>
 <html lang="it">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>CT Communication — Gestione</title>
-    <link rel="stylesheet" href="/styles.css" />
-  </head>
-  <body class="text-white bg-neutral-950">
-    <!-- Sfondo animato opzionale -->
-    <div class="bg-animated" aria-hidden="true">
-      <div class="blob blob--blue"></div>
-      <div class="blob blob--violet"></div>
-      <div class="blob blob--green"></div>
-    </div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CT Communication — Capo</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="text-white bg-neutral-950">
 
-    <!-- Overlay password -->
-    <div id="lock" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <form id="lock-form" class="w-full max-w-sm p-6 card" novalidate autocomplete="off">
-        <h1 class="mb-2 text-2xl font-bold">Area riservata</h1>
-        <p class="mb-4 text-sm text-neutral-300">Inserisci la password per accedere.</p>
-        <input id="lock-pass" type="password" class="w-full p-3 border rounded-md bg-neutral-900 border-white/10" placeholder="Password" />
-        <label class="flex items-center gap-2 mt-2 text-sm text-neutral-300">
-          <input id="lock-show" type="checkbox" class="accent-green-500" /> Mostra password
-        </label>
-        <p id="lock-err" class="hidden mt-2 text-sm text-red-400">Password errata.</p>
-        <button id="lock-submit" class="w-full mt-4 btn-primary" type="button">Entra</button>
-      </form>
-    </div>
+  <!-- OVERLAY PASSWORD -->
+  <div id="lock" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+    <form id="lock-form" class="w-full max-w-sm p-6 card" autocomplete="off">
+      <h1 class="mb-2 text-2xl font-bold">Area riservata</h1>
+      <p class="mb-4 text-sm text-neutral-300">Inserisci la password per accedere.</p>
+      <input id="lock-pass" type="password" class="w-full p-3 border rounded-md bg-neutral-900 border-white/10" placeholder="Password" />
+      <label class="flex items-center gap-2 mt-2 text-sm text-neutral-300">
+        <input id="lock-show" type="checkbox" class="accent-green-500" /> Mostra password
+      </label>
+      <p id="lock-err" class="hidden mt-2 text-sm text-red-400">Password errata.</p>
+      <button id="lock-submit" class="w-full mt-4 btn-primary" type="button">Entra</button>
+    </form>
+  </div>
 
-    <main class="pt-10 md:pt-16">
-      <section class="section">
-        <div class="container">
-          <h1 class="text-4xl font-extrabold md:text-5xl">Gestione contenuti</h1>
-          <p class="mt-2 text-neutral-300">Carica o elimina foto della galleria (max 6 per sede). Aggiungi o elimina dispositivi.</p>
+  <main class="pt-10 md:pt-16">
+    <section class="section">
+      <div class="container">
+        <h1 class="text-4xl font-extrabold md:text-5xl">Pannello Capo</h1>
+        <p class="mt-2 text-neutral-300">Gestisci foto delle sedi e i telefoni in vendita.</p>
+      </div>
+    </section>
 
-          <!-- Tabs semplificate -->
-          <div class="grid gap-4 mt-6 md:grid-cols-2">
-            <a href="#galleria" class="btn-primary">Galleria</a>
-            <a href="#dispositivi" class="btn-primary">Dispositivi</a>
-          </div>
+    <!-- GALLERIA SEDI -->
+    <section class="section" id="galleria">
+      <div class="container">
+        <div class="flex items-center justify-between gap-4">
+          <h2 class="text-3xl font-bold md:text-4xl">Galleria Sedi</h2>
+          <button id="gallery-reload" class="btn-primary">Ricarica</button>
         </div>
-      </section>
 
-      <!-- GALLERIA -->
-      <section id="galleria" class="section">
-        <div class="container">
-          <div class="flex items-center justify-between gap-4">
-            <h2 class="text-3xl font-bold md:text-4xl">Galleria negozi</h2>
-            <button id="gallery-reload" class="btn-primary">Ricarica</button>
-          </div>
+        <div class="grid gap-6 mt-4 md:grid-cols-2">
+          <!-- UPLOAD -->
+          <div class="p-4 card">
+            <label class="block text-sm text-neutral-300">Sede</label>
+            <select id="gal-sede" class="w-full p-2 mt-1 border rounded-md bg-neutral-900 border-white/10">
+              <option value="induno">Induno Olona</option>
+              <option value="varese">Varese</option>
+            </select>
 
-          <div class="grid gap-6 mt-4 md:grid-cols-2">
-            <!-- Colonna sinistra: upload e limiti -->
-            <div class="p-4 card">
-              <label class="block text-sm text-neutral-300">Sede</label>
-              <select id="gal-sede" class="w-full p-2 mt-1 border rounded-md bg-neutral-900 border-white/10">
-                <option value="induno">Induno Olona</option>
-                <option value="varese">Varese</option>
-              </select>
+            <p class="mt-3 text-sm text-neutral-300">Limite: <strong>6 foto per sede</strong>.</p>
+            <p class="mt-1 text-xs text-neutral-400">
+              Stato — Induno: <span id="cnt-induno">0</span>/6 • Varese: <span id="cnt-varese">0</span>/6
+            </p>
 
-              <p class="mt-3 text-sm text-neutral-300">Limite: massimo <strong>6 foto per sede</strong>.</p>
-              <p class="mt-1 text-xs text-neutral-400">
-                Stato — Induno: <span id="cnt-induno">0</span>/6 • Varese: <span id="cnt-varese">0</span>/6
-              </p>
-
-              <label class="block mt-4 mb-1 text-sm text-neutral-300">Carica file (drag &amp; drop o seleziona)</label>
-              <div id="gal-drop" class="flex items-center justify-between gap-3 p-4 text-sm border border-dashed rounded-md border-white/20 text-neutral-400">
-                <span>Trascina qui le immagini</span>
-                <label class="cursor-pointer btn-primary">
-                  Seleziona
-                  <input id="gal-input" type="file" accept="image/*" multiple class="hidden" />
-                </label>
+            <div class="mt-4">
+              <label class="block mb-1 text-sm text-neutral-300">Seleziona immagini</label>
+              <div class="flex items-center gap-3">
+                <label for="gal-input" class="cursor-pointer btn-primary">Seleziona file</label>
+                <button id="gal-clear" type="button" class="btn-primary">Pulisci selezione</button>
               </div>
-
-              <button id="gal-upload" class="mt-3 btn-primary">Carica su Supabase</button>
-              <p id="gal-status" class="mt-2 text-xs text-neutral-400"></p>
+              <input id="gal-input" type="file" accept="image/*" multiple class="sr-only" />
             </div>
 
-            <!-- Colonna destra: liste e azioni -->
-            <div>
-              <div class="grid gap-6 md:grid-cols-2">
-                <div class="p-4 card">
-                  <div class="flex items-center justify-between">
-                    <h3 class="font-semibold">Induno</h3>
-                  </div>
-                  <table class="w-full mt-2 text-sm table-fixed">
-                    <thead>
-                      <tr>
-                        <th class="px-2 py-1 text-left">File</th>
-                        <th class="px-2 py-1">Preview</th>
-                        <th class="px-2 py-1">Azioni</th>
-                      </tr>
-                    </thead>
-                    <tbody id="gal-list-induno"></tbody>
-                  </table>
-                </div>
+            <div id="gal-preview" class="grid grid-cols-3 gap-2 mt-3"></div>
 
-                <div class="p-4 card">
-                  <div class="flex items-center justify-between">
-                    <h3 class="font-semibold">Varese</h3>
-                  </div>
-                  <table class="w-full mt-2 text-sm table-fixed">
-                    <thead>
-                      <tr>
-                        <th class="px-2 py-1 text-left">File</th>
-                        <th class="px-2 py-1">Preview</th>
-                        <th class="px-2 py-1">Azioni</th>
-                      </tr>
-                    </thead>
-                    <tbody id="gal-list-varese"></tbody>
-                  </table>
-                </div>
+            <button id="gal-upload" class="mt-3 btn-primary">Carica</button>
+            <p id="gal-status" class="mt-2 text-xs text-neutral-400"></p>
+            <ul id="gal-status-list" class="mt-2 space-y-1 text-xs text-neutral-300"></ul>
+          </div>
+
+          <!-- LISTE PER SEDE -->
+          <div>
+            <div class="grid gap-6 md:grid-cols-2">
+              <div class="p-4 card">
+                <div class="flex items-center justify-between"><h3 class="font-semibold">Induno</h3></div>
+                <table class="w-full mt-2 text-sm table-fixed">
+                  <thead>
+                    <tr>
+                      <th class="px-2 py-1 text-left">File</th>
+                      <th class="px-2 py-1">Preview</th>
+                      <th class="px-2 py-1">Azioni</th>
+                    </tr>
+                  </thead>
+                  <tbody id="gal-list-induno"></tbody>
+                </table>
+              </div>
+              <div class="p-4 card">
+                <div class="flex items-center justify-between"><h3 class="font-semibold">Varese</h3></div>
+                <table class="w-full mt-2 text-sm table-fixed">
+                  <thead>
+                    <tr>
+                      <th class="px-2 py-1 text-left">File</th>
+                      <th class="px-2 py-1">Preview</th>
+                      <th class="px-2 py-1">Azioni</th>
+                    </tr>
+                  </thead>
+                  <tbody id="gal-list-varese"></tbody>
+                </table>
               </div>
             </div>
-          </div> <!-- /grid -->
-        </div>
-      </section>
-
-      <!-- DISPOSITIVI -->
-      <section id="dispositivi" class="section">
-        <div class="container">
-          <div class="flex items-center justify-between gap-4">
-            <h2 class="text-3xl font-bold md:text-4xl">Dispositivi</h2>
-            <button id="dev-reload" class="btn-primary">Ricarica</button>
           </div>
 
-          <div class="grid gap-6 mt-4 md:grid-cols-2">
-            <!-- form -->
-            <div class="p-4 card">
-              <label class="block text-sm text-neutral-300">Nome</label>
-              <input id="dev-name" class="w-full p-2 mt-1 border rounded-md bg-neutral-900 border-white/10" placeholder="iPhone 15" />
+        </div>
+      </div>
+    </section>
 
-              <label class="block mt-4 text-sm text-neutral-300">Descrizione</label>
-              <textarea id="dev-desc" class="w-full h-24 p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="128GB, vari colori, garanzia 24 mesi."></textarea>
+    <!-- TELEFONI / DISPOSITIVI -->
+    <section class="section" id="dispositivi">
+      <div class="container">
+        <div class="flex items-center justify-between gap-4">
+          <h2 class="text-3xl font-bold md:text-4xl">Telefoni</h2>
+          <button id="dev-reload" class="btn-primary">Ricarica</button>
+        </div>
 
-              <label class="block mt-4 text-sm text-neutral-300">Prezzo (opzionale)</label>
-              <input id="dev-price" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="€829" />
+        <div class="grid gap-6 mt-4 md:grid-cols-2">
+          <!-- FORM -->
+          <div class="p-4 card">
+            <label class="block text-sm text-neutral-300">Nome</label>
+            <input id="dev-name" class="w-full p-2 mt-1 border rounded-md bg-neutral-900 border-white/10" placeholder="iPhone 15" />
 
-              <label class="block mt-4 text-sm text-neutral-300">Immagini (URL pubblici - uno per riga)</label>
-              <textarea id="dev-images" class="w-full h-24 p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="/storage/v1/object/public/devices/iphone15-1.jpg&#10;/storage/v1/object/public/devices/iphone15-2.jpg"></textarea>
+            <label class="block mt-4 text-sm text-neutral-300">Descrizione</label>
+            <textarea id="dev-desc" class="w-full h-24 p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="128GB, vari colori, garanzia 24 mesi."></textarea>
 
-              <div class="flex gap-3 mt-4">
-                <button id="dev-save" class="btn-primary">Salva su DB</button>
-                <button id="dev-clear" class="btn-primary" type="button">Pulisci</button>
-              </div>
-              <p id="dev-status" class="mt-2 text-xs text-neutral-400"></p>
+            <label class="block mt-4 text-sm text-neutral-300">Prezzo (opzionale)</label>
+            <input id="dev-price" class="w-full p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="€829" />
+
+            <label class="block mt-4 text-sm text-neutral-300">Immagini (URL pubblici - uno per riga)</label>
+            <textarea id="dev-images" class="w-full h-24 p-2 border rounded-md bg-neutral-900 border-white/10" placeholder="https://.../foto1.jpg&#10;https://.../foto2.jpg"></textarea>
+
+            <div class="flex gap-3 mt-4">
+              <button id="dev-save" class="btn-primary">Aggiungi</button>
+              <button id="dev-clear" class="btn-primary" type="button">Pulisci</button>
             </div>
+            <p id="dev-status" class="mt-2 text-xs text-neutral-400"></p>
+          </div>
 
-            <!-- elenco -->
-            <div class="p-4 card">
-              <table class="w-full text-sm table-fixed">
-                <thead>
-                  <tr>
-                    <th class="px-2 py-1 text-left">Nome</th>
-                    <th class="px-2 py-1">Prezzo</th>
-                    <th class="px-2 py-1">Img</th>
-                    <th class="px-2 py-1">Azioni</th>
-                  </tr>
-                </thead>
-                <tbody id="dev-list"></tbody>
-              </table>
-            </div>
+          <!-- LISTA TELEFONI -->
+          <div class="p-4 card">
+            <table class="w-full text-sm table-fixed">
+              <thead>
+                <tr>
+                  <th class="px-2 py-1 text-left">Nome</th>
+                  <th class="px-2 py-1">Prezzo</th>
+                  <th class="px-2 py-1">Img</th>
+                  <th class="px-2 py-1">Azioni</th>
+                </tr>
+              </thead>
+              <tbody id="dev-list"></tbody>
+            </table>
           </div>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
+  </main>
 
-    <script>
-      (function(){
-        const PASS = 'Negozio2025!';
-        const lock = document.getElementById('lock');
-        const form = document.getElementById('lock-form');
-        const pass = document.getElementById('lock-pass');
-        const err  = document.getElementById('lock-err');
-        const show = document.getElementById('lock-show');
-        const btn  = document.getElementById('lock-submit');
+  <!-- PASSWORD SCRIPT (NON-MODULE) -->
+  <script>
+    (function(){
+      const PASS = 'Negozio2025!';
+      const lock = document.getElementById('lock');
+      const form = document.getElementById('lock-form');
+      const pass = document.getElementById('lock-pass');
+      const err  = document.getElementById('lock-err');
+      const show = document.getElementById('lock-show');
+      const btn  = document.getElementById('lock-submit');
 
-        if (!lock || !form || !pass || !btn) {
-          console.error('[Gestione] Password overlay non inizializzato');
+      document.documentElement.classList.add('overflow-hidden');
+
+      show.addEventListener('change', function(){
+        pass.type = this.checked ? 'text' : 'password';
+      });
+
+      function tryLogin(){
+        err.classList.add('hidden');
+        const ok = (pass.value || '').trim().normalize('NFC') === PASS;
+        if (ok){
+          lock.style.display = 'none';
+          document.documentElement.classList.remove('overflow-hidden');
+          pass.value = '';
+        } else {
+          err.classList.remove('hidden');
+          pass.focus();
+        }
+      }
+
+      btn.addEventListener('click', tryLogin);
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        tryLogin();
+      });
+    })();
+  </script>
+
+  <!-- LOGICA PRINCIPALE -->
+  <script type="module">
+    import { createClient } from '@supabase/supabase-js';
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const $ = (id) => document.getElementById(id);
+
+    // --- GALLERIA ELEMENTS ---
+    const galSede = $('gal-sede');
+    const galInput = $('gal-input');
+    const galClear = $('gal-clear');
+    const galPreview = $('gal-preview');
+    const galUpload = $('gal-upload');
+    const galStatus = $('gal-status');
+    const galStatusList = $('gal-status-list');
+    const galleryReload = $('gallery-reload');
+    const cntInd = $('cnt-induno');
+    const cntVar = $('cnt-varese');
+    const listInd = $('gal-list-induno');
+    const listVar = $('gal-list-varese');
+
+    // --- DEV ELEMENTS ---
+    const devName = $('dev-name');
+    const devDesc = $('dev-desc');
+    const devPrice = $('dev-price');
+    const devImages = $('dev-images');
+    const devSave = $('dev-save');
+    const devClear = $('dev-clear');
+    const devList = $('dev-list');
+    const devReload = $('dev-reload');
+    const devStatus = $('dev-status');
+
+    let bufferFiles = [];
+
+    function clearGalStatuses(){
+      galStatus.textContent = '';
+      galStatusList.innerHTML = '';
+    }
+
+    function addGalStatus(text, cls){
+      const li = document.createElement('li');
+      li.textContent = text;
+      if (cls) li.className = cls;
+      galStatusList.appendChild(li);
+      return li;
+    }
+
+    function renderPreview(files){
+      galPreview.innerHTML = (files || []).map(f => {
+        const url = URL.createObjectURL(f);
+        return `
+          <div class="relative overflow-hidden rounded aspect-video">
+            <img src="${url}" class="object-cover w-full h-full" />
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ---- FILE PICKER ----
+    galInput.addEventListener('click', () => {
+      galInput.value = '';
+    });
+
+    galInput.addEventListener('change', () => {
+      const files = Array.from(galInput.files || []);
+      bufferFiles = files.filter(f => (f.type || '').startsWith('image/'));
+      renderPreview(bufferFiles);
+      if (files.length && !bufferFiles.length){
+        galStatus.textContent = 'I file selezionati non sono immagini.';
+      } else {
+        galStatus.textContent = '';
+      }
+    });
+
+    galClear.addEventListener('click', () => {
+      bufferFiles = [];
+      galInput.value = '';
+      galPreview.innerHTML = '';
+      clearGalStatuses();
+    });
+
+    // ---- GALLERIA DB ----
+    async function countBySede(sede){
+      const { data, error } = await supabase
+        .from('gallery')
+        .select('id', { count: 'exact', head: false })
+        .eq('sede', sede);
+
+      if (error){
+        console.error(error);
+        return 0;
+      }
+      return (data || []).length;
+    }
+
+    function renderGalleryTable(tbody, sede, rows){
+      tbody.innerHTML = rows.map(r => {
+        const { data: pub } = supabase
+          .storage
+          .from(`${sede}-gallery`)
+          .getPublicUrl(r.path);
+        const url = pub?.publicUrl || '';
+        return `
+          <tr>
+            <td class="px-2 py-1 truncate">${r.path}</td>
+            <td class="px-2 py-1">
+              <img src="${url}" class="inline-block object-cover w-16 h-10 rounded" />
+            </td>
+            <td class="px-2 py-1">
+              <button class="btn-primary gal-del" data-id="${r.id}" data-sede="${sede}" data-path="${r.path}">
+                Elimina
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function loadGallery(){
+      galStatus.textContent = '';
+      const { data, error } = await supabase
+        .from('gallery')
+        .select('id,sede,path,created_at')
+        .order('created_at', { ascending: false });
+
+      if (error){
+        galStatus.textContent = 'Errore DB (gallery): ' + (error.message || error);
+        return;
+      }
+
+      const rows = data || [];
+      const ind = rows.filter(r => r.sede === 'induno');
+      const va  = rows.filter(r => r.sede === 'varese');
+
+      cntInd.textContent = ind.length.toString();
+      cntVar.textContent = va.length.toString();
+
+      renderGalleryTable(listInd, 'induno', ind);
+      renderGalleryTable(listVar, 'varese', va);
+    }
+
+    // click su Elimina immagine
+    [listInd, listVar].forEach(tbl => {
+      tbl.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.gal-del');
+        if (!btn) return;
+        if (!confirm('Eliminare questa immagine?')) return;
+
+        const { id, sede, path } = btn.dataset;
+
+        // elimina dallo Storage
+        const { error: delStorageErr } = await supabase
+          .storage
+          .from(`${sede}-gallery`)
+          .remove([path]);
+
+        if (delStorageErr){
+          alert('Errore rimozione file: ' + (delStorageErr.message || delStorageErr));
           return;
         }
 
-        // blocca scroll finché non loggato
-        document.documentElement.classList.add('overflow-hidden');
+        // elimina dal DB
+        const { error: delDbErr } = await supabase
+          .from('gallery')
+          .delete()
+          .eq('id', Number(id));
 
-        // toggle mostra password
-        if (show) {
-          show.addEventListener('change', function(){
-            pass.type = this.checked ? 'text' : 'password';
-          });
+        if (delDbErr){
+          alert('Errore rimozione DB: ' + (delDbErr.message || delDbErr));
+          return;
         }
 
-        function tryLogin() {
-          err.classList.add('hidden');
-          const input = (pass.value || '').trim().normalize('NFC');
-          const ok = input === PASS;
-          if (ok) {
-            lock.style.display = 'none';
-            document.documentElement.classList.remove('overflow-hidden');
-            pass.value = '';
-          } else {
-            err.textContent = 'Password errata. Ricontrolla maiuscole/minuscole e spazi.';
-            err.classList.remove('hidden');
-            pass.focus();
-          }
-        }
-
-        // click esplicito sul bottone
-        btn.addEventListener('click', tryLogin);
-        // invio da tastiera dentro il form
-        form.addEventListener('submit', function(ev){ ev.preventDefault(); tryLogin(); });
-      })();
-    </script>
-
-    <script type="module">
-      import { supabase } from './lib/supabase.js';
-
-      // ===== Helpers =====
-      const $ = (id) => document.getElementById(id);
-      function priceToNumber(p) {
-        if (!p) return null;
-        return Number(String(p).replace(/[^0-9.,]/g,'').replace(',','.')) || null;
-      }
-
-      // ====== GALLERIA ======
-      const galSede = $('gal-sede');
-      const galDrop = $('gal-drop');
-      const galInput = $('gal-input');
-      const galUpload = $('gal-upload');
-      const galStatus = $('gal-status');
-      const galReload = $('gallery-reload');
-      const listInduno = $('gal-list-induno');
-      const listVarese = $('gal-list-varese');
-      const cntInduno = $('cnt-induno');
-      const cntVarese = $('cnt-varese');
-
-      // DnD
-      function preventDefaults(e){ e.preventDefault(); e.stopPropagation(); }
-      ['dragenter','dragover','dragleave','drop'].forEach(ev => galDrop.addEventListener(ev, preventDefaults));
-      galDrop.addEventListener('dragover', () => galDrop.classList.add('ring-1','ring-green-400/40'));
-      galDrop.addEventListener('dragleave', () => galDrop.classList.remove('ring-1','ring-green-400/40'));
-      galDrop.addEventListener('drop', (e) => {
-        galDrop.classList.remove('ring-1','ring-green-400/40');
-        const dt = e.dataTransfer;
-        if (dt?.files?.length) galInput.files = dt.files;
-      });
-
-      galReload.addEventListener('click', loadGallery);
-
-      async function loadGallery(){
-        const { data, error } = await supabase.from('gallery').select('id,sede,path,created_at').order('created_at',{ascending:false});
-        if (error) { console.error(error); return; }
-        const ind = data.filter(r=>r.sede==='induno');
-        const varg = data.filter(r=>r.sede==='varese');
-
-        cntInduno.textContent = ind.length;
-        cntVarese.textContent = varg.length;
-
-        renderTbl(listInduno, 'induno', ind);
-        renderTbl(listVarese, 'varese', varg);
-
-        // blocca upload se raggiunto limite della sede selezionata
-        const len = galSede.value === 'induno' ? ind.length : varg.length;
-        galUpload.disabled = len >= 6;
-        galUpload.classList.toggle('opacity-50', len >= 6);
-      }
-
-      function renderTbl(tbody, sede, rows){
-        tbody.innerHTML = rows.map(r=>{
-          const { data:pub } = supabase.storage.from(`${sede}-gallery`).getPublicUrl(r.path);
-          const url = pub?.publicUrl || `/storage/v1/object/public/${sede}-gallery/${r.path}`;
-          return `
-          <tr>
-            <td class="px-2 py-1 truncate">${r.path}</td>
-            <td class="px-2 py-1"><img src="${url}" alt="${r.path}" class="inline-block object-cover w-16 h-10 rounded" /></td>
-            <td class="px-2 py-1">
-              <button class="btn-primary gal-del" data-id="${r.id}" data-sede="${sede}" data-path="${r.path}">Elimina</button>
-            </td>
-          </tr>`;
-        }).join('');
-      }
-
-      [listInduno, listVarese].forEach(tbl=>{
-        tbl.addEventListener('click', async (e)=>{
-          const btn = e.target.closest('.gal-del'); if(!btn) return;
-          if(!confirm('Eliminare questa immagine?')) return;
-          const id = Number(btn.dataset.id);
-          const sede = btn.dataset.sede;
-          const path = btn.dataset.path;
-          await supabase.storage.from(`${sede}-gallery`).remove([path]);
-          await supabase.from('gallery').delete().eq('id', id);
-          await loadGallery();
-        });
-      });
-
-      galUpload.addEventListener('click', async ()=>{
-        galStatus.textContent = '';
-        const sede = galSede.value; const bucket = `${sede}-gallery`;
-        // quante restano?
-        const { data: now } = await supabase.from('gallery').select('id').eq('sede', sede);
-        const already = (now||[]).length;
-        const remaining = Math.max(0, 6 - already);
-        if (remaining === 0) { galStatus.textContent = 'Limite raggiunto (6). Elimina qualcosa prima.'; return; }
-        if (!galInput.files || galInput.files.length === 0) { galInput.click(); galStatus.textContent = 'Seleziona file, poi riprova.'; return; }
-
-        let ok=0;
-        const files = Array.from(galInput.files).slice(0, remaining);
-        for (const file of files){
-          const filePath = `${Date.now()}-${file.name}`.replace(/\s+/g,'_');
-          const { error: upErr } = await supabase.storage.from(bucket).upload(filePath, file, { cacheControl:'3600', upsert:false });
-          if (upErr) { console.error(upErr); galStatus.textContent='Errore upload.'; return; }
-          const { error: insErr } = await supabase.from('gallery').insert({ sede, path:filePath });
-          if (insErr) { console.error(insErr); galStatus.textContent='Errore DB.'; return; }
-          ok++;
-        }
-        galStatus.textContent = `Caricate ${ok} immagini.`;
-        galInput.value = '';
         await loadGallery();
+        alert('Immagine eliminata');
       });
+    });
 
-      galSede.addEventListener('change', loadGallery);
+    galleryReload.addEventListener('click', async () => {
+      await loadGallery();
+      alert('Galleria aggiornata');
+    });
 
-      // ====== DISPOSITIVI ======
-      const devName = $('dev-name');
-      const devDesc = $('dev-desc');
-      const devPrice = $('dev-price');
-      const devImages = $('dev-images');
-      const devSave = $('dev-save');
-      const devClear = $('dev-clear');
-      const devStatus = $('dev-status');
-      const devList = $('dev-list');
-      const devReload = $('dev-reload');
-
-      devReload.addEventListener('click', loadDevices);
-      devClear.addEventListener('click', ()=>{
-        devName.value=''; devDesc.value=''; devPrice.value=''; devImages.value='';
-        devStatus.textContent='';
-      });
-
-      devSave.addEventListener('click', async ()=>{
-        try {
-          devStatus.textContent='Salvataggio...';
-          const name = devName.value.trim();
-          const descr = devDesc.value.trim();
-          const price = priceToNumber(devPrice.value.trim());
-          const images = devImages.value
-            .split('\n')
-            .map(s=>s.trim())
-            .filter(Boolean);
-          if (!name || !descr) { devStatus.textContent='Nome e descrizione sono obbligatori.'; return; }
-          const { error } = await supabase.from('devices').insert({ name, descr, price, images });
-          if (error) throw error;
-          devStatus.textContent='Dispositivo salvato!';
-          devClear.click();
-          await loadDevices();
-        } catch (e) {
-          console.error(e);
-          devStatus.textContent='Errore durante il salvataggio.';
-        }
-      });
-
-      async function loadDevices(){
-        const { data, error } = await supabase.from('devices').select('id,name,price,images').order('created_at',{ascending:false});
-        if (error){ console.error(error); return; }
-        devList.innerHTML = (data||[]).map(r=>{
-          const imgs = Array.isArray(r.images) ? r.images.length : 0;
-          const price = r.price==null ? '—' : `€${Number(r.price).toFixed(2)}`;
-          return `
-          <tr>
-            <td class="px-2 py-1 text-left">${r.name}</td>
-            <td class="px-2 py-1 text-center">${price}</td>
-            <td class="px-2 py-1 text-center">${imgs}</td>
-            <td class="px-2 py-1 text-center">
-              <button class="btn-primary dev-del" data-id="${r.id}">Elimina</button>
-            </td>
-          </tr>`;
-        }).join('');
+    // ---- UPLOAD GALLERIA ----
+    galUpload.addEventListener('click', async () => {
+      // blocco se non hai ancora inserito la password
+      if (document.getElementById('lock')?.style.display !== 'none'){
+        galStatus.textContent = 'Sblocca con password per procedere.';
+        return;
       }
 
-      devList.addEventListener('click', async (e)=>{
-        const btn = e.target.closest('.dev-del'); if(!btn) return;
-        if(!confirm('Eliminare questo dispositivo?')) return;
-        const id = Number(btn.dataset.id);
-        const { error } = await supabase.from('devices').delete().eq('id', id);
-        if (error) { console.error(error); return; }
-        await loadDevices();
-      });
+      clearGalStatuses();
 
-      // bootstrap
+      const sede = galSede.value;
+      const bucket = `${sede}-gallery`;
+
+      if (!bufferFiles.length){
+        galStatus.textContent = 'Seleziona immagini prima di caricare.';
+        return;
+      }
+
+      const already = await countBySede(sede);
+      const remaining = Math.max(0, 6 - already);
+
+      if (remaining === 0){
+        galStatus.textContent = 'Limite raggiunto (6). Elimina prima qualche foto.';
+        return;
+      }
+
+      galUpload.disabled = true;
+      galUpload.classList.add('opacity-50');
+
+      let ok = 0;
+
+      for (const file of bufferFiles.slice(0, remaining)){
+        const row = addGalStatus(`Caricamento ${file.name}...`);
+        const path = `${Date.now()}-${file.name}`.replace(/\\s+/g, '_');
+
+        const { error: upErr } = await supabase
+          .storage
+          .from(bucket)
+          .upload(path, file, { cacheControl: '3600', upsert: false });
+
+        if (upErr){
+          row.textContent = `Errore upload ${file.name}: ${upErr.message || upErr}`;
+          row.className = 'text-red-400';
+          continue;
+        }
+
+        row.textContent = `Salvo nel DB: ${file.name}...`;
+
+        const { error: insErr } = await supabase
+          .from('gallery')
+          .insert({ sede, path });
+
+        if (insErr){
+          row.textContent = `Errore DB ${file.name}: ${insErr.message || insErr}`;
+          row.className = 'text-red-400';
+          continue;
+        }
+
+        row.textContent = `Caricato ${file.name}`;
+        row.className = 'text-green-400';
+        ok++;
+      }
+
+      galStatus.textContent = ok ? `Caricate ${ok} immagini.` : 'Nessun file caricato.';
+      if (ok) alert(`Caricate ${ok} immagini`); else alert('Nessun file caricato');
+
+      bufferFiles = [];
+      galInput.value = '';
+      galPreview.innerHTML = '';
+
+      galUpload.disabled = false;
+      galUpload.classList.remove('opacity-50');
+
+      await loadGallery();
+    });
+
+    // ---- DISPOSITIVI ----
+    function priceToNumber(p){
+      if (!p) return null;
+      const clean = String(p).replace(/[^0-9.,]/g, '').replace(',', '.');
+      const n = Number(clean);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function deviceRow(r){
+      const price = r.price == null ? '—' : `€${Number(r.price).toFixed(2)}`;
+      const imgs = Array.isArray(r.images) ? r.images.length : 0;
+      return `
+        <tr data-id="${r.id}">
+          <td class="px-2 py-1 text-left">${r.name}</td>
+          <td class="px-2 py-1 text-center">${price}</td>
+          <td class="px-2 py-1 text-center">${imgs}</td>
+          <td class="px-2 py-1 space-x-1 text-center">
+            <button class="btn-primary dev-edit">Modifica</button>
+            <button class="btn-primary dev-del">Elimina</button>
+          </td>
+        </tr>
+      `;
+    }
+
+    async function loadDevices(){
+      devStatus.textContent = '';
+      const { data, error } = await supabase
+        .from('devices')
+        .select('id,name,descr,price,images,created_at')
+        .order('created_at', { ascending: false });
+
+      if (error){
+        devStatus.textContent = 'Errore DB (devices): ' + (error.message || error);
+        return;
+      }
+
+      devList.innerHTML = (data || []).map(deviceRow).join('');
+    }
+
+    devReload.addEventListener('click', async () => {
+      await loadDevices();
+      alert('Telefoni aggiornati');
+    });
+
+    devClear.addEventListener('click', () => {
+      devName.value = '';
+      devDesc.value = '';
+      devPrice.value = '';
+      devImages.value = '';
+      devStatus.textContent = '';
+    });
+
+    devSave.addEventListener('click', async () => {
+      devStatus.textContent = 'Salvataggio...';
+
+      const name = (devName.value || '').trim();
+      const descr = (devDesc.value || '').trim();
+      const price = priceToNumber((devPrice.value || '').trim());
+      const images = (devImages.value || '')
+        .split('\\n')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if (!name || !descr){
+        devStatus.textContent = 'Nome e descrizione sono obbligatori.';
+        return;
+      }
+
+      const { error } = await supabase
+        .from('devices')
+        .insert({ name, descr, price, images });
+
+      if (error){
+        devStatus.textContent = 'Errore DB: ' + (error.message || error);
+        return;
+      }
+
+      devStatus.textContent = 'Telefono aggiunto!';
+      alert('Telefono aggiunto');
+
+      devClear.click();
+      await loadDevices();
+    });
+
+    devList.addEventListener('click', async (e) => {
+      const row = e.target.closest('tr');
+      if (!row) return;
+      const id = Number(row.dataset.id);
+
+      // elimina
+      if (e.target.matches('.dev-del')){
+        if (!confirm('Eliminare questo telefono?')) return;
+        const { error } = await supabase
+          .from('devices')
+          .delete()
+          .eq('id', id);
+        if (error){
+          alert('Errore DB: ' + (error.message || error));
+          return;
+        }
+        await loadDevices();
+        alert('Telefono eliminato');
+      }
+
+      // modifica
+      if (e.target.matches('.dev-edit')){
+        const { data, error } = await supabase
+          .from('devices')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error){
+          alert('Errore lettura: ' + (error.message || error));
+          return;
+        }
+
+        const newName = prompt('Nome', data.name ?? '') ?? data.name;
+        const newDescr = prompt('Descrizione', data.descr ?? '') ?? data.descr;
+        const priceStr = prompt('Prezzo (vuoto per nessuno)', data.price == null ? '' : String(data.price)) ?? (data.price == null ? '' : String(data.price));
+        const imagesStr = prompt('Immagini (URL separati da newline)', Array.isArray(data.images) ? data.images.join('\\n') : '') ?? (Array.isArray(data.images) ? data.images.join('\\n') : '');
+
+        const newPrice = priceStr.trim() === '' ? null : priceToNumber(priceStr);
+        const newImages = imagesStr
+          .split('\\n')
+          .map(s => s.trim())
+          .filter(Boolean);
+
+        const { error: uErr } = await supabase
+          .from('devices')
+          .update({ name: newName, descr: newDescr, price: newPrice, images: newImages })
+          .eq('id', id);
+
+        if (uErr){
+          alert('Errore salvataggio: ' + (uErr.message || uErr));
+          return;
+        }
+
+        await loadDevices();
+        alert('Telefono aggiornato');
+      }
+    });
+
+    // --- AVVIO ---
+    (async () => {
       await loadGallery();
       await loadDevices();
-    </script>
-  </body>
+    })();
+  </script>
+</body>
 </html>
