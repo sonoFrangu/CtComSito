@@ -71,14 +71,10 @@
     <section id="galleria" class="section">
       <div class="container">
         <h2 class="mb-6 text-3xl font-bold md:text-4xl" data-aos="fade-up">Galleria negozio</h2>
-        <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-          <div class="overflow-hidden card" data-aos="fade-up"><img src="/assets/varese-gallery/1.jpg" alt="Negozio Varese 1" class="object-cover w-full h-48" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'/assets/varese-gallery/1.jpg mancante',className:'p-4 text-sm text-neutral-400'}))"></div>
-          <div class="overflow-hidden card" data-aos="fade-up" data-aos-delay="50"><img src="/assets/varese-gallery/2.jpg" alt="Negozio Varese 2" class="object-cover w-full h-48" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'/assets/varese-gallery/2.jpg mancante',className:'p-4 text-sm text-neutral-400'}))"></div>
-          <div class="overflow-hidden card" data-aos="fade-up" data-aos-delay="100"><img src="/assets/varese-gallery/3.jpg" alt="Negozio Varese 3" class="object-cover w-full h-48" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'/assets/varese-gallery/3.jpg mancante',className:'p-4 text-sm text-neutral-400'}))"></div>
-          <div class="overflow-hidden card" data-aos="fade-up" data-aos-delay="150"><img src="/assets/varese-gallery/4.jpg" alt="Negozio Varese 4" class="object-cover w-full h-48" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'/assets/varese-gallery/4.jpg mancante',className:'p-4 text-sm text-neutral-400'}))"></div>
-          <div class="overflow-hidden card" data-aos="fade-up" data-aos-delay="200"><img src="/assets/varese-gallery/5.jpg" alt="Negozio Varese 5" class="object-cover w-full h-48" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'/assets/varese-gallery/5.jpg mancante',className:'p-4 text-sm text-neutral-400'}))"></div>
-          <div class="overflow-hidden card" data-aos="fade-up" data-aos-delay="250"><img src="/assets/varese-gallery/6.jpg" alt="Negozio Varese 6" class="object-cover w-full h-48" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'/assets/varese-gallery/6.jpg mancante',className:'p-4 text-sm text-neutral-400'}))"></div>
-        </div>
+        <p class="text-sm text-neutral-300" data-aos="fade-up" data-aos-delay="50">
+          Foto caricate dal pannello di gestione.
+        </p>
+        <div id="sede-gallery" class="grid gap-4 mt-4 sm:grid-cols-2 md:grid-cols-3"></div>
       </div>
     </section>
 
@@ -137,6 +133,14 @@
     <script type="module">
       import "./main.js";
       import { renderHeader, renderFooter, renderTeam, enablePageTransitions } from "./components.js";
+
+      import { createClient } from "@supabase/supabase-js";
+
+      const supabaseUrl = "https://bvdsyogzgkgjkwnnycyr.supabase.co";
+      const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2ZHN5b2d6Z2tnamt3bm55Y3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMTE5OTYsImV4cCI6MjA3ODU4Nzk5Nn0.6Iw2r8hXg6VN-kmw4NoOTSGRzMH20SP2PhbTq1o3G-0";
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      const SEDE = "varese";
+
       // Prevent automatic scroll restoration and ensure page opens at the top
       if ("scrollRestoration" in history) {
         history.scrollRestoration = "manual";
@@ -151,12 +155,9 @@
       document.getElementById("footer").innerHTML = renderFooter();
       renderTeam("team-grid");
 
-      // === Devices data (Varese) ===
-      const devices = [
-        { name: "iPhone 15", desc: "128GB, vari colori, garanzia 24 mesi.", price: "€829", images: ["/assets/devices/iphone15-1.jpg", "/assets/devices/iphone15-2.jpg"] },
-        { name: "Samsung Galaxy A55", desc: "Ottimo rapporto qualità/prezzo, display AMOLED.", price: "€349", images: ["/assets/devices/galaxy-a55-1.jpg", "/assets/devices/galaxy-a55-2.jpg"] },
-        { name: "Xiaomi Redmi Note 13", desc: "Batteria a lunga durata e ricarica rapida.", price: null, images: ["/assets/devices/redmi13-1.jpg"] }
-      ];
+      // === Devices data (Varese) da Supabase ===
+      let devices = [];
+      let current = 0;
 
       const nameEl = document.getElementById("dev-name");
       const descEl = document.getElementById("dev-desc");
@@ -165,43 +166,105 @@
       const prevBtn = document.getElementById("dev-prev");
       const nextBtn = document.getElementById("dev-next");
 
-      function renderSlides() {
-        wrap.innerHTML = devices
-          .map((d, idx) => {
-            const src = d.images[0];
+      function renderSlidesForDevice(d) {
+        if (!wrap) return;
+        if (!d || !Array.isArray(d.images) || !d.images.length) {
+          wrap.innerHTML = '<p class="p-4 text-sm text-neutral-400">immagine mancante</p>';
+          return;
+        }
+        wrap.innerHTML = d.images
+          .map((src, idx) => {
+            const safeImg = src
+              ? `<img src="${src}" alt="${d.name || ''}" class="object-cover w-full h-full" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'immagine mancante',className:'p-4 text-sm text-neutral-400'}))"/>`
+              : '<div class="flex items-center justify-center w-full h-full p-4 text-sm text-neutral-500">immagine mancante</div>';
             return `
-              <button data-idx="${idx}" class="snap-center shrink-0 card overflow-hidden w-[260px] h-[180px] focus:outline-none" type="button">
-                <img src="${src}" alt="${d.name}" class="object-cover w-full h-full" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'immagine mancante',className:'p-4 text-sm text-neutral-400'}))"/>
-              </button>
+              <div data-img-idx="${idx}" class="snap-center shrink-0 card overflow-hidden w-[260px] h-[180px]">
+                ${safeImg}
+              </div>
             `;
           })
           .join("");
       }
 
-      renderSlides();
-
-      // Updated show function to avoid auto-scrolling on first render
       function show(idx, { scroll = false } = {}) {
+        if (!devices.length) {
+          nameEl.textContent = "Nessun dispositivo disponibile";
+          descEl.textContent = "";
+          priceEl.textContent = "";
+          if (wrap) {
+            wrap.innerHTML = '<p class="p-4 text-sm text-neutral-400">Nessun dispositivo registrato per questa sede.</p>';
+          }
+          return;
+        }
         current = (idx + devices.length) % devices.length;
         const d = devices[current];
         nameEl.textContent = d.name;
-        descEl.textContent = d.desc;
-        priceEl.textContent = d.price ? d.price : "";
+        descEl.textContent = d.descr || d.desc || "";
+        priceEl.textContent = d.price
+          ? (typeof d.price === "number" ? `€${d.price.toFixed(2)}` : d.price)
+          : "";
 
-        // only center the slide when user interacted
-        if (scroll) {
-          const btn = wrap.querySelector(`[data-idx="${current}"]`);
-          if (btn) btn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+        renderSlidesForDevice(d);
+
+        if (scroll && wrap) {
+          const first = wrap.querySelector("[data-img-idx='0']");
+          if (first) first.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
         }
       }
 
-      show(0, { scroll: false });
+      const galleryContainer = document.getElementById("sede-gallery");
 
-      wrap.addEventListener("click", (e) => {
-        const b = e.target.closest("[data-idx]");
-        if (!b) return;
-        show(parseInt(b.dataset.idx, 10), { scroll: true });
-      });
+      async function loadGallery() {
+        if (!galleryContainer) return;
+        const { data, error } = await supabase
+          .from("gallery")
+          .select("id,path,created_at")
+          .eq("sede", SEDE)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Errore gallery Varese", error);
+          galleryContainer.innerHTML = '<p class="text-sm text-red-400">Errore nel caricamento della galleria.</p>';
+          return;
+        }
+
+        if (!data || !data.length) {
+          galleryContainer.innerHTML = '<p class="text-sm text-neutral-400">Nessuna foto caricata per questa sede.</p>';
+          return;
+        }
+
+        const bucket = `${SEDE}-gallery`;
+
+        galleryContainer.innerHTML = data
+          .map((r) => {
+            const { data: pub } = supabase.storage.from(bucket).getPublicUrl(r.path);
+            const url = (pub && pub.publicUrl) || "";
+            return `
+              <div class="overflow-hidden card" data-aos="fade-up">
+                <img src="${url}" alt="Negozio Varese" class="object-cover w-full h-48" />
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      async function loadDevices() {
+        const { data, error } = await supabase
+          .from("devices")
+          .select("id,name,descr,price,images,sede,created_at")
+          .eq("sede", SEDE)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Errore devices Varese", error);
+          devices = [];
+          show(0);
+          return;
+        }
+
+        devices = data || [];
+        show(0);
+      }
 
       prevBtn.addEventListener("click", () => show(current - 1, { scroll: true }));
       nextBtn.addEventListener("click", () => show(current + 1, { scroll: true }));
@@ -231,6 +294,11 @@
         const y = el.getBoundingClientRect().top + window.scrollY - 80; // compensate sticky header
         smoothScrollTo(y, 1200); // slower scroll
       });
+
+      (async () => {
+        await loadGallery();
+        await loadDevices();
+      })();
 
       enablePageTransitions();
     </script>
