@@ -1,160 +1,446 @@
-// =============================
-//  Protezione con password (frontend)
-//  ⚠️ Cambia la password sotto!
-// =============================
-const ADMIN_PASSWORD = "ct-admin-2025"; // <-- modifica qui
-const LOCK_ID = "admin-lock";
-const PASS_INPUT_ID = "admin-pass";
-const PASS_ERR_ID = "admin-error";
-const LOGOUT_BTN_ID = "admin-logout";
+import { createClient } from '@supabase/supabase-js';
 
-const lockEl = document.getElementById(LOCK_ID);
-const passEl = document.getElementById(PASS_INPUT_ID);
-const errEl = document.getElementById(PASS_ERR_ID);
-const logoutEl = document.getElementById(LOGOUT_BTN_ID);
+console.log('gestione.js caricato');
 
-function showLock(show) {
-  if (!lockEl) return;
-  lockEl.style.display = show ? "flex" : "none";
-  document.documentElement.classList.toggle("overflow-hidden", show);
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  alert('ERRORE configurazione: VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY non sono impostate.');
+  console.error('Missing env', { supabaseUrl, supabaseKey });
 }
-function isAuthed() { return localStorage.getItem("gest_auth") === "ok"; }
-function setAuthed(ok) { ok ? localStorage.setItem("gest_auth", "ok") : localStorage.removeItem("gest_auth"); }
 
-if (!isAuthed()) showLock(true); else showLock(false);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-const formEl = document.getElementById("admin-form");
-formEl?.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const val = passEl?.value || "";
-  if (val === ADMIN_PASSWORD) {
-    setAuthed(true);
-    errEl?.classList.add("hidden");
-    showLock(false);
-    passEl.value = "";
-    logoutEl?.classList.remove("hidden");
-  } else {
-    errEl?.classList.remove("hidden");
-    passEl?.focus();
+const $ = (id) => document.getElementById(id);
+
+// --- Helper messaggi ---
+function showError(scope, error) {
+  const msg =
+    typeof error === 'string'
+      ? error
+      : error && error.message
+      ? error.message
+      : JSON.stringify(error);
+  console.error('ERRORE', scope, error);
+  alert('ERRORE ' + scope + ': ' + msg);
+}
+
+function showInfo(message) {
+  console.log('INFO:', message);
+  alert(message);
+}
+
+// --- GALLERIA ELEMENTS ---
+const galSede = $('gal-sede');
+const galInput = $('gal-input');
+const galClear = $('gal-clear');
+const galPreview = $('gal-preview');
+const galUpload = $('gal-upload');
+const galStatus = $('gal-status');
+const galStatusList = $('gal-status-list');
+const galleryReload = $('gallery-reload');
+const cntInd = $('cnt-induno');
+const cntVar = $('cnt-varese');
+const listInd = $('gal-list-induno');
+const listVar = $('gal-list-varese');
+
+// --- DEV ELEMENTS ---
+const devName = $('dev-name');
+const devDesc = $('dev-desc');
+const devPrice = $('dev-price');
+const devImages = $('dev-images');
+const devSave = $('dev-save');
+const devClear = $('dev-clear');
+const devList = $('dev-list');
+const devReload = $('dev-reload');
+const devStatus = $('dev-status');
+
+let bufferFiles = [];
+
+// ----------------- GALLERIA -----------------
+function clearGalStatuses() {
+  galStatus.textContent = '';
+  galStatusList.innerHTML = '';
+}
+
+function addGalStatus(text, cls) {
+  const li = document.createElement('li');
+  li.textContent = text;
+  if (cls) li.className = cls;
+  galStatusList.appendChild(li);
+  return li;
+}
+
+function renderPreview(files) {
+  galPreview.innerHTML = (files || [])
+    .map((f) => {
+      const url = URL.createObjectURL(f);
+      return `
+        <div class="relative overflow-hidden rounded aspect-video">
+          <img src="${url}" class="object-cover w-full h-full" />
+        </div>
+      `;
+    })
+    .join('');
+}
+
+// file picker
+if (galInput) {
+  galInput.addEventListener('click', () => {
+    galInput.value = '';
+  });
+
+  galInput.addEventListener('change', () => {
+    const files = Array.from(galInput.files || []);
+    bufferFiles = files.filter((f) => (f.type || '').startsWith('image/'));
+    renderPreview(bufferFiles);
+    if (files.length && !bufferFiles.length) {
+      galStatus.textContent = 'I file selezionati non sono immagini.';
+    } else {
+      galStatus.textContent = '';
+    }
+  });
+}
+
+if (galClear) {
+  galClear.addEventListener('click', () => {
+    bufferFiles = [];
+    galInput.value = '';
+    galPreview.innerHTML = '';
+    clearGalStatuses();
+  });
+}
+
+async function countBySede(sede) {
+  const { data, error } = await supabase
+    .from('gallery')
+    .select('id', { count: 'exact', head: false })
+    .eq('sede', sede);
+
+  if (error) {
+    showError('countBySede(' + sede + ')', error);
+    return 0;
   }
-});
-logoutEl?.addEventListener("click", () => { setAuthed(false); showLock(true); });
-
-// =============================
-//  FOTO – drag&drop + generatore snippet
-// =============================
-const fotoBtn = document.getElementById("foto-genera");
-const fotoSede = document.getElementById("foto-sede");
-const fotoFiles = document.getElementById("foto-files");
-const fotoOut = document.getElementById("foto-output");
-const copyFoto = document.getElementById("copy-foto");
-const fotoDrop = document.getElementById("foto-drop");
-const fotoInput = document.getElementById("foto-input");
-
-function addFilesToTextarea(fileList) {
-  const names = Array.from(fileList).map(f => f.name).join("\n");
-  fotoFiles.value = [fotoFiles.value, names].filter(Boolean).join("\n");
-}
-fotoInput?.addEventListener("change", (e) => { if (e.target.files?.length) addFilesToTextarea(e.target.files); });
-function preventDefaults(e){ e.preventDefault(); e.stopPropagation(); }
-["dragenter","dragover","dragleave","drop"].forEach(ev => fotoDrop?.addEventListener(ev, preventDefaults));
-fotoDrop?.addEventListener("dragover", () => fotoDrop.classList.add("ring-1","ring-blue-400/40"));
-fotoDrop?.addEventListener("dragleave", () => fotoDrop.classList.remove("ring-1","ring-blue-400/40"));
-fotoDrop?.addEventListener("drop", (e) => {
-  fotoDrop.classList.remove("ring-1","ring-blue-400/40");
-  const dt = e.dataTransfer; if (dt?.files?.length) addFilesToTextarea(dt.files);
-});
-
-function buildFotoCards(sede, files) {
-  return files.map((f, i) => {
-    const delay = i * 50;
-    const src = `/assets/${sede}-gallery/${f}`;
-    const alt = `Negozio ${sede === 'induno' ? 'Induno' : 'Varese'} ${i+1}`;
-    return `
-<div class="card overflow-hidden" data-aos="fade-up"${delay ? ` data-aos-delay="${delay}"` : ""}>
-  <img src="${src}" alt="${alt}" class="w-full h-48 object-cover"
-       onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'${src} mancante',className:'p-4 text-sm text-neutral-400'}))">
-</div>`; }).join("\n");
+  return (data || []).length;
 }
 
-fotoBtn?.addEventListener("click", () => {
-  const sede = fotoSede.value; // "induno" | "varese"
-  const files = fotoFiles.value.split("\n").map(s => s.trim()).filter(Boolean);
-  fotoOut.value = files.length ? buildFotoCards(sede, files) : "<!-- nessun file inserito -->";
-});
-copyFoto?.addEventListener("click", async () => {
-  if (!fotoOut.value) return; await navigator.clipboard.writeText(fotoOut.value);
-  copyFoto.textContent = "Copiato!"; setTimeout(() => (copyFoto.textContent = "Copia"), 1200);
+function renderGalleryTable(tbody, sede, rows) {
+  tbody.innerHTML = rows
+    .map((r) => {
+      const { data: pub } = supabase.storage.from(`${sede}-gallery`).getPublicUrl(r.path);
+      const url = pub?.publicUrl || '';
+      return `
+        <tr>
+          <td class="px-2 py-1 truncate">${r.path}</td>
+          <td class="px-2 py-1">
+            <img src="${url}" class="inline-block object-cover w-16 h-10 rounded" />
+          </td>
+          <td class="px-2 py-1">
+            <button class="btn-primary gal-del" data-id="${r.id}" data-sede="${sede}" data-path="${r.path}">
+              Elimina
+            </button>
+          </td>
+        </tr>
+      `;
+    })
+    .join('');
+}
+
+async function loadGallery() {
+  galStatus.textContent = '';
+  const { data, error } = await supabase
+    .from('gallery')
+    .select('id,sede,path,created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    galStatus.textContent = 'Errore DB (gallery): ' + (error.message || error);
+    showError('loadGallery', error);
+    return;
+  }
+
+  const rows = data || [];
+  console.log('loadGallery ok, righe:', rows.length);
+
+  const ind = rows.filter((r) => r.sede === 'induno');
+  const va = rows.filter((r) => r.sede === 'varese');
+
+  cntInd.textContent = String(ind.length);
+  cntVar.textContent = String(va.length);
+
+  renderGalleryTable(listInd, 'induno', ind);
+  renderGalleryTable(listVar, 'varese', va);
+}
+
+// delete immagine
+[listInd, listVar].forEach((tbl) => {
+  if (!tbl) return;
+  tbl.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.gal-del');
+    if (!btn) return;
+    if (!confirm('Eliminare questa immagine?')) return;
+
+    const { id, sede, path } = btn.dataset;
+
+    const { error: delStorageErr } = await supabase.storage.from(`${sede}-gallery`).remove([path]);
+    if (delStorageErr) {
+      showError('rimozione file storage', delStorageErr);
+      return;
+    }
+
+    const { error: delDbErr } = await supabase.from('gallery').delete().eq('id', Number(id));
+    if (delDbErr) {
+      showError('rimozione record gallery', delDbErr);
+      return;
+    }
+
+    await loadGallery();
+    alert('Immagine eliminata');
+  });
 });
 
-// =============================
-//  DISPOSITIVI – JSON + UI immagini dinamiche + download
-// =============================
-const devNome = document.getElementById("dev-nome");
-const devDesc = document.getElementById("dev-desc");
-const devPrezzo = document.getElementById("dev-prezzo");
-const devImgsWrap = document.getElementById("dev-images");
-const devOut = document.getElementById("dev-output");
-const devGen = document.getElementById("dev-genera");
-const copyDev = document.getElementById("copy-dev");
-const dlDev = document.getElementById("download-dev");
-const dlDevicesEmpty = document.getElementById("download-devices-empty");
+if (galleryReload) {
+  galleryReload.addEventListener('click', async () => {
+    await loadGallery();
+    alert('Galleria aggiornata');
+  });
+}
 
-// Aggiungi/rimuovi righe immagine
-devImgsWrap?.addEventListener("click", (e) => {
-  const addBtn = e.target.closest(".dev-add");
-  if (!addBtn) return;
-  const row = document.createElement("div");
-  row.className = "flex gap-2";
-  row.innerHTML = `
-    <input class="w-full bg-neutral-900 border border-white/10 rounded-md p-2" placeholder="/assets/devices/immagine.jpg">
-    <button type="button" class="btn-primary dev-remove">−</button>
+// upload
+if (galUpload) {
+  galUpload.addEventListener('click', async () => {
+    const lock = document.getElementById('lock');
+    if (lock && lock.style.display !== 'none') {
+      galStatus.textContent = 'Sblocca con password per procedere.';
+      showInfo('Devi prima inserire la password per usare il pannello.');
+      return;
+    }
+
+    clearGalStatuses();
+
+    const sede = galSede.value;
+    const bucket = `${sede}-gallery`;
+
+    if (!bufferFiles.length) {
+      galStatus.textContent = 'Seleziona immagini prima di caricare.';
+      showInfo("Nessun file selezionato per l'upload.");
+      return;
+    }
+
+    const already = await countBySede(sede);
+    const remaining = Math.max(0, 6 - already);
+
+    if (remaining === 0) {
+      galStatus.textContent = 'Limite raggiunto (6). Elimina prima qualche foto.';
+      showInfo('Limite di 6 immagini per la sede "' + sede + '" già raggiunto.');
+      return;
+    }
+
+    galUpload.disabled = true;
+    galUpload.classList.add('opacity-50');
+
+    let ok = 0;
+
+    for (const file of bufferFiles.slice(0, remaining)) {
+      const row = addGalStatus(`Caricamento ${file.name}...`);
+      const path = `${Date.now()}-${file.name}`.replace(/\s+/g, '_');
+
+      const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+      if (upErr) {
+        row.textContent = `Errore upload ${file.name}: ${upErr.message || upErr}`;
+        row.className = 'text-red-400';
+        showError('upload storage ' + file.name, upErr);
+        continue;
+      }
+
+      row.textContent = `Salvo nel DB: ${file.name}...`;
+
+      const { error: insErr } = await supabase.from('gallery').insert({ sede, path });
+
+      if (insErr) {
+        row.textContent = `Errore DB ${file.name}: ${insErr.message || insErr}`;
+        row.className = 'text-red-400';
+        showError('insert gallery ' + file.name, insErr);
+        continue;
+      }
+
+      row.textContent = `Caricato ${file.name}`;
+      row.className = 'text-green-400';
+      ok++;
+    }
+
+    galStatus.textContent = ok ? `Caricate ${ok} immagini.` : 'Nessun file caricato.';
+    if (ok) alert(`Caricate ${ok} immagini`); else alert('Nessun file caricato');
+
+    bufferFiles = [];
+    galInput.value = '';
+    galPreview.innerHTML = '';
+
+    galUpload.disabled = false;
+    galUpload.classList.remove('opacity-50');
+
+    await loadGallery();
+  });
+}
+
+// ----------------- DISPOSITIVI -----------------
+function priceToNumber(p) {
+  if (!p) return null;
+  const clean = String(p).replace(/[^0-9.,]/g, '').replace(',', '.');
+  const n = Number(clean);
+  return Number.isFinite(n) ? n : null;
+}
+
+function deviceRow(r) {
+  const price = r.price == null ? '—' : `€${Number(r.price).toFixed(2)}`;
+  const imgs = Array.isArray(r.images) ? r.images.length : 0;
+  return `
+    <tr data-id="${r.id}">
+      <td class="px-2 py-1 text-left">${r.name}</td>
+      <td class="px-2 py-1 text-center">${price}</td>
+      <td class="px-2 py-1 text-center">${imgs}</td>
+      <td class="px-2 py-1 space-x-1 text-center">
+        <button class="btn-primary dev-edit">Modifica</button>
+        <button class="btn-primary dev-del">Elimina</button>
+      </td>
+    </tr>
   `;
-  devImgsWrap.appendChild(row);
-});
-
-devImgsWrap?.addEventListener("click", (e) => {
-  const remBtn = e.target.closest(".dev-remove");
-  if (!remBtn) return;
-  remBtn.parentElement?.remove();
-});
-
-function getDeviceImages() {
-  return Array.from(devImgsWrap.querySelectorAll("input"))
-    .map(i => i.value.trim())
-    .filter(Boolean);
-}
-function toDeviceJson() {
-  const obj = {
-    name: (devNome.value || "").trim(),
-    desc: (devDesc.value || "").trim(),
-    price: (devPrezzo.value || "").trim() || null,
-    images: getDeviceImages()
-  };
-  return JSON.stringify(obj, null, 2);
 }
 
-devGen?.addEventListener("click", () => { devOut.value = toDeviceJson(); });
-copyDev?.addEventListener("click", async () => {
-  if (!devOut.value) devOut.value = toDeviceJson();
-  await navigator.clipboard.writeText(devOut.value);
-  copyDev.textContent = "Copiato!"; setTimeout(() => (copyDev.textContent = "Copia"), 1200);
-});
+async function loadDevices() {
+  devStatus.textContent = '';
+  const { data, error } = await supabase
+    .from('devices')
+    .select('id,name,descr,price,images,created_at')
+    .order('created_at', { ascending: false });
 
-dlDev?.addEventListener("click", () => {
-  const blob = new Blob([devOut.value || toDeviceJson()], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "device.json";
-  a.click();
-  URL.revokeObjectURL(a.href);
-});
+  if (error) {
+    devStatus.textContent = 'Errore DB (devices): ' + (error.message || error);
+    showError('loadDevices', error);
+    return;
+  }
 
-dlDevicesEmpty?.addEventListener("click", () => {
-  const blob = new Blob(["[]"], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "devices.json";
-  a.click();
-  URL.revokeObjectURL(a.href);
-});
+  console.log('loadDevices ok, dispositivi:', (data || []).length);
+  devList.innerHTML = (data || []).map(deviceRow).join('');
+}
+
+if (devReload) {
+  devReload.addEventListener('click', async () => {
+    await loadDevices();
+    alert('Telefoni aggiornati');
+  });
+}
+
+if (devClear) {
+  devClear.addEventListener('click', () => {
+    devName.value = '';
+    devDesc.value = '';
+    devPrice.value = '';
+    devImages.value = '';
+    devStatus.textContent = '';
+  });
+}
+
+if (devSave) {
+  devSave.addEventListener('click', async () => {
+    devStatus.textContent = 'Salvataggio...';
+
+    const name = (devName.value || '').trim();
+    const descr = (devDesc.value || '').trim();
+    const price = priceToNumber((devPrice.value || '').trim());
+    const images = (devImages.value || '')
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (!name || !descr) {
+      devStatus.textContent = 'Nome e descrizione sono obbligatori.';
+      return;
+    }
+
+    const { error } = await supabase.from('devices').insert({ name, descr, price, images });
+
+    if (error) {
+      devStatus.textContent = 'Errore DB: ' + (error.message || error);
+      showError('insert device', error);
+      return;
+    }
+
+    devStatus.textContent = 'Telefono aggiunto!';
+    alert('Telefono aggiunto');
+
+    devClear.click();
+    await loadDevices();
+  });
+}
+
+if (devList) {
+  devList.addEventListener('click', async (e) => {
+    const row = e.target.closest('tr');
+    if (!row) return;
+    const id = Number(row.dataset.id);
+
+    if (e.target.matches('.dev-del')) {
+      if (!confirm('Eliminare questo telefono?')) return;
+      const { error } = await supabase.from('devices').delete().eq('id', id);
+      if (error) {
+        showError('delete device', error);
+        return;
+      }
+      await loadDevices();
+      alert('Telefono eliminato');
+    }
+
+    if (e.target.matches('.dev-edit')) {
+      const { data, error } = await supabase.from('devices').select('*').eq('id', id).single();
+
+      if (error) {
+        showError('read device ' + id, error);
+        return;
+      }
+
+      const newName = prompt('Nome', data.name ?? '') ?? data.name;
+      const newDescr = prompt('Descrizione', data.descr ?? '') ?? data.descr;
+      const priceStr =
+        prompt('Prezzo (vuoto per nessuno)', data.price == null ? '' : String(data.price)) ??
+        (data.price == null ? '' : String(data.price));
+      const imagesStr =
+        prompt(
+          'Immagini (URL separati da newline)',
+          Array.isArray(data.images) ? data.images.join('\n') : ''
+        ) ?? (Array.isArray(data.images) ? data.images.join('\n') : '');
+
+      const newPrice = priceStr.trim() === '' ? null : priceToNumber(priceStr);
+      const newImages = imagesStr
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const { error: uErr } = await supabase
+        .from('devices')
+        .update({ name: newName, descr: newDescr, price: newPrice, images: newImages })
+        .eq('id', id);
+
+      if (uErr) {
+        showError('update device ' + id, uErr);
+        return;
+      }
+
+      await loadDevices();
+      alert('Telefono aggiornato');
+    }
+  });
+}
+
+// avvio
+(async () => {
+  showInfo('Pannello gestione inizializzato (gestione.js)');
+  await loadGallery();
+  await loadDevices();
+  console.log('Gestione pronta.');
+})();
