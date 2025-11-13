@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Matteo Cortazzi",
+    "role": "Proprietario",
+    "photo": "team/image.png"
+  },
+  {
+    "name": "Vincenzo Laforgia",
+    "role": "Dipendente",
+    "photo": "team/vincenzo.png"
+  },
+  {
+    "name": "Serena Baroffio",
+    "role": "Dipendente",
+    "photo": "team/serena.png"
+  }
+]

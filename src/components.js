@@ -30,20 +30,43 @@ export function renderHeader(active = "") {
     </footer>`;
   }
   
-  export async function renderTeam(gridId) {
+  export function renderTeam(gridId) {
     const container = document.getElementById(gridId);
     if (!container) return;
-    const res = await fetch("/employees.json");
-    const team = await res.json();
-    container.innerHTML = team.map(m => `
-      <div class="card" data-aos="fade-up">
-        <div class="aspect-[4/3] overflow-hidden rounded-md mb-4 bg-neutral-800">
-          <img src="${m.photo}" alt="${m.name}" class="w-full h-full object-cover transition duration-500 hover:scale-105"/>
-        </div>
-        <h3 class="text-lg font-semibold">${m.name}</h3>
-        <p class="text-neutral-400">${m.role}</p>
-      </div>
-    `).join("");
+  
+    const team = [
+      { name: "Matteo Cortazzi", role: "Proprietario", photo: "/assets/team/matteo.png" },
+      { name: "Vincenzo Laforgia", role: "Dipendente", photo: "/assets/team/vincenzo.png" },
+      { name: "Serena Baroffio", role: "Dipendente", photo: "/assets/team/serena.png" }
+    ];
+  
+    if (!team.length) {
+      container.innerHTML = `<p class="text-sm text-neutral-400">Nessun membro del team configurato.</p>`;
+      return;
+    }
+  
+    container.innerHTML = team
+      .map((m) => {
+        const name = m.name || "";
+        const role = m.role || "";
+        let photo = (m.photo || "").trim();
+  
+        if (!photo) {
+          photo = "/assets/logo.png";
+        }
+  
+        return `
+          <div class="card" data-aos="fade-up">
+            <div class="aspect-[9/16] overflow-hidden rounded-md mb-4 bg-neutral-800 flex items-center justify-center">
+              <img src="${photo}" alt="${name}" class="w-full h-full object-cover transition duration-500 hover:scale-105"
+                onerror="this.style.display='none'; this.parentElement.classList.add('text-sm','text-neutral-400'); this.parentElement.textContent='immagine mancante';"/>
+            </div>
+            <h3 class="text-lg font-semibold">${name}</h3>
+            <p class="text-neutral-400">${role}</p>
+          </div>
+        `;
+      })
+      .join("");
   }
 
   export function enablePageTransitions() {
@@ -63,4 +86,3 @@ export function renderHeader(active = "") {
       setTimeout(() => (window.location.href = href), 220);
     });
   }
-  
