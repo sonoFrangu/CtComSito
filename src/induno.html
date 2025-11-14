@@ -145,12 +145,22 @@
     </section>
 
     <section id="dispositivi" class="section">
-      <div class="container grid items-start gap-8 md:grid-cols-2">
-        <!-- Left: details -->
-        <div data-aos="fade-up">
-          <h2 class="text-3xl font-bold md:text-4xl">Scopri i nostri dispositivi</h2>
-          <p class="mt-2 text-neutral-300">Seleziona un dispositivo dalla galleria a destra per leggere descrizione e prezzo (quando disponibile).</p>
-          <div class="mt-6 card">
+      <div class="container" data-aos="fade-up">
+        <div id="device-card" class="space-y-4 card touch-pan-y">
+          <div>
+            <h2 class="text-3xl font-bold md:text-4xl">Scopri i nostri dispositivi</h2>
+            <p class="mt-2 text-neutral-300">
+              Scorri tra i dispositivi disponibili e guarda le immagini qui sopra. Su smartphone puoi cambiare modello anche con uno swipe.
+            </p>
+          </div>
+
+          <!-- Immagini del dispositivo corrente -->
+          <div id="dev-images" class="grid grid-cols-1 gap-3 sm:grid-cols-5">
+            <!-- immagini iniettate da JS -->
+          </div>
+
+          <!-- Dettagli del dispositivo -->
+          <div>
             <h3 id="dev-name" class="text-2xl font-extrabold">&nbsp;</h3>
             <p id="dev-desc" class="mt-2 text-neutral-300">&nbsp;</p>
             <p id="dev-price" class="mt-3 text-lg font-semibold text-green-400"></p>
@@ -158,16 +168,30 @@
               <a href="#contatti" class="btn-primary">Chiedi disponibilità</a>
             </div>
           </div>
-        </div>
-        <!-- Right: carousel -->
-        <div data-aos="fade-left">
-          <div class="relative">
-            <div id="dev-carousel" class="flex gap-3 pb-2 overflow-x-auto snap-x snap-mandatory"></div>
-            <div class="flex items-center justify-between mt-3">
-              <button id="dev-prev" class="btn-primary" type="button">◀</button>
-              <button id="dev-next" class="btn-primary" type="button">▶</button>
-            </div>
+
+          <!-- Navigazione dispositivi -->
+          <div class="flex items-center justify-between pt-3 mt-2 border-t border-white/10">
+            <button
+              id="dev-prev"
+              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold border rounded-full border-green-400/70 bg-green-500/10 hover:bg-green-500/20"
+              type="button"
+            >
+              ◀
+              <span class="hidden sm:inline">Dispositivo precedente</span>
+            </button>
+            <button
+              id="dev-next"
+              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold border rounded-full border-green-400/70 bg-green-500/10 hover:bg-green-500/20"
+              type="button"
+            >
+              <span class="hidden sm:inline">Dispositivo successivo</span>
+              ▶
+            </button>
           </div>
+
+          <p class="text-xs text-neutral-400">
+            Suggerimento: scorri verso sinistra o destra sul riquadro per cambiare dispositivo.
+          </p>
         </div>
       </div>
     </section>
@@ -221,28 +245,87 @@
       const nameEl = document.getElementById("dev-name");
       const descEl = document.getElementById("dev-desc");
       const priceEl = document.getElementById("dev-price");
-      const wrap = document.getElementById("dev-carousel");
+      const imagesWrap = document.getElementById("dev-images");
       const prevBtn = document.getElementById("dev-prev");
       const nextBtn = document.getElementById("dev-next");
+      const deviceCard = document.getElementById("device-card");
+
+      // === Lightbox helper functions for device images ===
+      let lightboxEl = null;
+
+      function closeLightbox() {
+        if (lightboxEl) {
+          lightboxEl.classList.add("hidden");
+        }
+      }
+
+      function openLightbox(src) {
+        if (!src) return;
+
+        if (!lightboxEl) {
+          lightboxEl = document.createElement("div");
+          lightboxEl.id = "device-lightbox";
+          lightboxEl.className = "fixed inset-0 z-50 flex items-center justify-center bg-black/90";
+          lightboxEl.innerHTML = `
+            <div class="relative max-w-[95vw] max-h-[95vh]">
+              <button type="button" class="absolute px-3 py-1 text-sm text-white rounded-full top-2 right-2 bg-black/70" id="lightbox-close">
+                Chiudi ✕
+              </button>
+              <img id="lightbox-image" src="${src}" alt="Dispositivo" class="max-w-full max-h-[90vh] object-contain" />
+            </div>
+          `;
+          document.body.appendChild(lightboxEl);
+
+          lightboxEl.addEventListener("click", (e) => {
+            if (e.target === lightboxEl || e.target.id === "lightbox-close") {
+              closeLightbox();
+            }
+          });
+        } else {
+          const img = lightboxEl.querySelector("#lightbox-image");
+          if (img) img.src = src;
+          lightboxEl.classList.remove("hidden");
+        }
+      }
+
+      function attachImageClickHandlers() {
+        if (!imagesWrap) return;
+        const thumbs = imagesWrap.querySelectorAll(".device-thumb");
+        thumbs.forEach((el) => {
+          const img = el.querySelector("img");
+          const src = img ? img.getAttribute("src") : null;
+          if (!src) return;
+          el.onclick = () => openLightbox(src);
+        });
+      }
 
       function renderSlidesForDevice(d) {
-        if (!wrap) return;
+        if (!imagesWrap) return;
         if (!d || !Array.isArray(d.images) || !d.images.length) {
-          wrap.innerHTML = '<p class="p-4 text-sm text-neutral-400">immagine mancante</p>';
+          imagesWrap.innerHTML = '<p class="p-4 text-sm text-center text-neutral-400">immagine mancante</p>';
           return;
         }
-        wrap.innerHTML = d.images
-          .map((src, idx) => {
+
+        imagesWrap.innerHTML = d.images
+          .map((src) => {
             const safeImg = src
-              ? `<img src="${src}" alt="${d.name || ''}" class="object-cover w-full h-full" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'immagine mancante',className:'p-4 text-sm text-neutral-400'}))"/>`
-              : '<div class="flex items-center justify-center w-full h-full p-4 text-sm text-neutral-500">immagine mancante</div>';
+              ? `<img src="${src}" alt="${d.name || ''}"
+                    class="object-cover w-full h-full"
+                    onerror="this.replaceWith(Object.assign(document.createElement('div'),{
+                      textContent:'immagine mancante',
+                      className:'p-4 text-sm text-neutral-400 text-center'
+                    }))"
+                  />`
+              : '<div class="flex items-center justify-center w-full h-full p-4 text-sm text-center text-neutral-500">immagine mancante</div>';
             return `
-              <div data-img-idx="${idx}" class="snap-center shrink-0 card overflow-hidden w-[260px] h-[180px]">
+              <div class="flex items-center justify-center overflow-hidden bg-neutral-900/60 border border-white/10 rounded-xl aspect-[9/16] max-w-[110px] mx-auto cursor-zoom-in device-thumb">
                 ${safeImg}
               </div>
             `;
           })
           .join("");
+
+        attachImageClickHandlers();
       }
 
       function show(idx, { scroll = false } = {}) {
@@ -250,8 +333,8 @@
           nameEl.textContent = "Nessun dispositivo disponibile";
           descEl.textContent = "";
           priceEl.textContent = "";
-          if (wrap) {
-            wrap.innerHTML = '<p class="p-4 text-sm text-neutral-400">Nessun dispositivo registrato per questa sede.</p>';
+          if (imagesWrap) {
+            imagesWrap.innerHTML = '<p class="p-4 text-sm text-neutral-400">Nessun dispositivo registrato per questa sede.</p>';
           }
           return;
         }
@@ -265,11 +348,6 @@
 
         // aggiorna le immagini a destra in base al dispositivo corrente
         renderSlidesForDevice(d);
-
-        if (scroll && wrap) {
-          const first = wrap.querySelector("[data-img-idx='0']");
-          if (first) first.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-        }
       }
 
       const galleryContainer = document.getElementById("sede-gallery");
@@ -330,6 +408,31 @@
 
       prevBtn.addEventListener("click", () => show(current - 1, { scroll: true }));
       nextBtn.addEventListener("click", () => show(current + 1, { scroll: true }));
+
+      // Swipe per cambiare dispositivo su mobile
+      if (deviceCard) {
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        deviceCard.addEventListener("touchstart", (e) => {
+          if (!e.touches || !e.touches.length) return;
+          touchStartX = e.touches[0].clientX;
+        });
+
+        deviceCard.addEventListener("touchend", (e) => {
+          if (!e.changedTouches || !e.changedTouches.length) return;
+          touchEndX = e.changedTouches[0].clientX;
+          const deltaX = touchEndX - touchStartX;
+          if (Math.abs(deltaX) < 40) return; // ignora swipe troppo piccoli
+          if (deltaX < 0) {
+            // swipe verso sinistra -> prossimo
+            show(current + 1, { scroll: false });
+          } else {
+            // swipe verso destra -> precedente
+            show(current - 1, { scroll: false });
+          }
+        });
+      }
 
       (async () => {
         await loadGallery();
