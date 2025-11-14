@@ -6,7 +6,7 @@ html { scroll-behavior: smooth; }
 
 .btn-primary { @apply inline-flex items-center gap-2 px-5 py-3 rounded-md bg-green-600 text-white hover:bg-green-700 transition; }
 .card { @apply rounded-xl border border-white/10 bg-white/5 backdrop-blur p-6 shadow; }
-.nav-link { @apply text-sm md:text-base hover:text-green-400 transition; }
+.nav-link { @apply text-sm md:text-base hover:text-green-700 transition; }
 .section { @apply py-24 md:py-32; }
 .container { @apply mx-auto max-w-6xl px-6; }
 
@@ -46,7 +46,26 @@ html { scroll-behavior: smooth; }
 
 /* Hover smoother on cards */
 .card { transition: transform .25s ease, box-shadow .25s ease, background .25s ease; }
+
 .card:hover { transform: translateY(-2px); }
+
+/* Highlight Luce & Gas card with a soft green glow */
+.card--highlight-energy {
+  position: relative;
+  box-shadow: 0 0 24px rgba(74, 222, 128, 0.55);
+  border-color: rgba(74, 222, 128, 0.9);
+}
+
+.card--highlight-energy::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: radial-gradient(circle at 50% 0, rgba(74, 222, 128, 0.35), transparent 55%);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: -1;
+}
 
 /* ===== Unified Logo Grid ===== */
 .logo-grid { @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4; }

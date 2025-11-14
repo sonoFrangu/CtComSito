@@ -7,8 +7,8 @@ export function renderHeader(active = "") {
           <span class="sr-only">CT Communication</span>
         </a>
         <nav class="flex gap-6">
-          <a href="/induno" class="nav-link ${active==='induno' ? 'text-blue-400' : ''}">Induno Olona</a>
-          <a href="/varese" class="nav-link ${active==='varese' ? 'text-blue-400' : ''}">Varese</a>
+          <a href="/induno" class="nav-link ${active==='induno' ? 'text-green-400' : ''}">Induno Olona</a>
+          <a href="/varese" class="nav-link ${active==='varese' ? 'text-green-400' : ''}">Varese</a>
         </nav>
       </div>
     </header>`;
